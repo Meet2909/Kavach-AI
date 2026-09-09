@@ -14,3 +14,9 @@ This document tracks all major architectural decisions and hardware observations
 - **Test Setup**: `qwen2.5vl:7b` prompted to extract equipment tags from a generated MRPL P&ID diagram.
 - **Result**: PASSED. The model successfully loaded the image and returned all 21 equipment tags accurately (Furnace F-101, Reactor R-101, etc.).
 - **OOM Status**: No Out-Of-Memory crash occurred. The model peaked at exactly **4.5 GB / 6.0 GB** Dedicated GPU Memory. This leaves 1.5 GB of safe headroom. No 2B-class fallback model is required for baseline operation.
+
+### Hot-Swap Architecture (Day 2)
+- **Problem**: We need to seamlessly switch between `qwen2.5-coder:7b` and `qwen2.5vl:7b` without relying on Ollama's automatic memory management, which can sometimes fail to unload models aggressively enough on constrained hardware.
+- **Implementation**: `backend/model_swap.py`
+- **API**: The `swap_model(target_model)` function hits `/api/ps` to check loaded models. It forces an unload via `/api/generate` with `"keep_alive": 0` for any non-target models, pausing for 1 second to let VRAM clear. It then pre-loads the target model with `"keep_alive": -1`.
+- **UI State**: The script emits `STATE: 'Switching to vision model...'` or `STATE: 'Switching to coder model...'` to the console so the Orchestrator can capture this `stdout` and forward it to Ananya's Frontend Route Card.
