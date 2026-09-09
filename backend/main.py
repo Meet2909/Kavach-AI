@@ -13,6 +13,7 @@ from agent import execute_agent_loop, AgentMemory
 
 # Import Vinit's tools
 from sandbox import run_python_in_sandbox, check_sandbox_ready
+from tool_gate import check_permission, get_allowed_tools, Verdict
 
 app = FastAPI(
     title="KAVACH-AI API Gateway",
@@ -77,6 +78,33 @@ def run_code(request: CodeRequest):
     """
     result = run_python_in_sandbox(request.code, job_id=request.job_id)
     return result
+
+
+# ─────────────────────────────────────────────
+# ENDPOINT 8: Tool Permission Gate
+# ─────────────────────────────────────────────
+
+class PermissionRequest(BaseModel):
+    task_type: str   # e.g. "summary", "coding", "vision"
+    tool_name: str   # e.g. "run_python", "write_docx"
+
+@app.post("/check_permission")
+def check_tool_permission(request: PermissionRequest):
+    """
+    Checks whether a tool call is ALLOW / DENY / HUMAN_APPROVAL
+    for the given task type. Called by the agent before every tool execution.
+    This implements the 'Least Privilege Agent' principle.
+    """
+    return check_permission(request.task_type, request.tool_name)
+
+
+@app.get("/tools/{task_type}")
+def list_allowed_tools(task_type: str):
+    """
+    Returns all tools and their permission verdicts for a given task type.
+    The agent calls this during the PLAN phase to know its own permissions.
+    """
+    return get_allowed_tools(task_type)
 
 
 # ─────────────────────────────────────────────

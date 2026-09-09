@@ -105,3 +105,14 @@ This document tracks all major architectural decisions and hardware observations
 - `--rm` auto-removes the container, preventing container accumulation on a long-running demo machine.
 - 15-second timeout is sufficient for engineering calculation code while killing clearly runaway loops.
 - `python:3.11-slim` was chosen over `alpine` for better numpy/pandas compatibility if math-heavy libraries are needed inside the sandbox in future days.
+
+## Decision 9: Tool Permission Gate — `backend/tool_gate.py`
+**Date:** 2026-09-09 | **Author:** Vinit Jha
+**Decision:** Built a static POLICY_TABLE that maps every task type (`summary`, `coding`, `vision`, `csv_query`, `report`) to an `ALLOW / DENY / HUMAN_APPROVAL` verdict for every available tool.
+**Reasoning:**
+- A bounded agent must not be allowed to use tools outside its current task's scope. A coding session calling `write_docx` makes no sense and is a security leak.
+- `HUMAN_APPROVAL` for all write/execute tools means the human is always in the loop before anything irreversible happens — directly satisfies the research-backed "human approval gate" differentiator.
+- The `get_allowed_tools(task_type)` function is called during PLAN phase so the agent knows its own permission scope before it even tries to pick a tool — prevents unnecessary DENY events mid-execution.
+- A static policy table was chosen over dynamic rule evaluation for hackathon reliability — deterministic, no ML inference needed, zero chance of policy hallucination.
+- Exposed as `/check_permission` and `/tools/{task_type}` API endpoints so the frontend (Aniket's TracePanel) can display live permission verdicts to the judge.
+
