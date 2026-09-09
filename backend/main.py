@@ -11,6 +11,9 @@ from typing import List
 # Import the state machine that Meet built
 from agent import execute_agent_loop, AgentMemory
 
+# Import Vinit's tools
+from sandbox import run_python_in_sandbox, check_sandbox_ready
+
 app = FastAPI(
     title="KAVACH-AI API Gateway",
     description="Sovereign AI Orchestrator — No external calls made."
@@ -48,11 +51,32 @@ class TaskRequest(BaseModel):
 @app.get("/health")
 def health_check():
     """Ping from the React frontend to verify the backend is online."""
+    sandbox_status = check_sandbox_ready()
     return {
         "status": "API is live",
         "version": "1.0",
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
+        "sandbox": sandbox_status
     }
+
+
+# ─────────────────────────────────────────────
+# ENDPOINT 7: Run Code in Docker Sandbox
+# ─────────────────────────────────────────────
+
+class CodeRequest(BaseModel):
+    code: str     # The Python code string to execute
+    job_id: str   # Ties execution to an existing job for audit trail
+
+@app.post("/run_code")
+def run_code(request: CodeRequest):
+    """
+    Executes AI-generated Python code inside an isolated Docker sandbox.
+    Network is disabled inside the container — proves sovereignty.
+    A hard 15s timeout kills any runaway loop.
+    """
+    result = run_python_in_sandbox(request.code, job_id=request.job_id)
+    return result
 
 
 # ─────────────────────────────────────────────

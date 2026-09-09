@@ -81,3 +81,27 @@ This document tracks all major architectural decisions and hardware observations
 * **Context:** The system needs to track the execution steps (`AgentMemory`) of active tasks for UI rendering.
 * **Decision:** Utilized a native Python dictionary (`jobs_db`) for short-term trace storage mapped to unique UUIDs.
 * **Reasoning:** For a 6-day hackathon, implementing a heavy persistent database (like PostgreSQL) for transient trace logs introduces unnecessary latency and configuration overhead. An in-memory dictionary is sufficient for real-time trace polling, though trace data will be wiped if the orchestrator server restarts.
+
+---
+
+# Vinit's Architectural Decisions (vinit-orchestrator branch)
+
+## Decision 7: Pandas CSV Query Tool — `backend/csv_tool.py`
+**Date:** 2026-09-09 | **Author:** Vinit Jha
+**Decision:** Built a structured `query_csv()` tool with three functions: row filtering, numeric stats, and schema introspection.
+**Reasoning:**
+- The AI needs to ground answers in real historical data (e.g., "PUMP-A failed 3 times this quarter").
+- Using Pandas keeps the logic entirely local — no SQL server needed, no external calls.
+- The `get_csv_schema()` function is called during the PLAN phase so the AI knows column names before querying, reducing hallucinated column names.
+- `max_rows=50` cap prevents the AI's context window from being flooded with thousands of rows.
+
+## Decision 8: Docker Offline Sandbox — `backend/sandbox.py`
+**Date:** 2026-09-09 | **Author:** Vinit Jha
+**Decision:** All AI-generated Python code is executed inside a Docker container with `--network none`, `--memory=256m`, `--read-only`, and a 15-second `subprocess.timeout` hard kill.
+**Reasoning:**
+- AI-generated code must never run on the host machine directly — it could delete files, open sockets, or loop infinitely.
+- `--network none` is a Docker-level guarantee (not just a policy) that no external call can be made from inside the container. This is our strongest live proof of sovereignty.
+- The `read-only` filesystem with a small `/tmp` tmpfs means the container cannot persist anything to the host after exit.
+- `--rm` auto-removes the container, preventing container accumulation on a long-running demo machine.
+- 15-second timeout is sufficient for engineering calculation code while killing clearly runaway loops.
+- `python:3.11-slim` was chosen over `alpine` for better numpy/pandas compatibility if math-heavy libraries are needed inside the sandbox in future days.
