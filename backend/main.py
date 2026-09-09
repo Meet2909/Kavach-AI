@@ -14,6 +14,7 @@ from agent import execute_agent_loop, AgentMemory
 # Import Vinit's tools
 from sandbox import run_python_in_sandbox, check_sandbox_ready
 from tool_gate import check_permission, get_allowed_tools, Verdict
+from artifact_validator import validate_artifact
 
 app = FastAPI(
     title="KAVACH-AI API Gateway",
@@ -204,22 +205,63 @@ def get_job_status(job_id: str):
 # ─────────────────────────────────────────────
 
 @app.get("/artifact/{job_id}")
-def get_artifact(job_id: str):
+def get_artifact(job_id: str, task_type: str = "report"):
     """
-    Returns the final generated DOCX/XLSX artifact for download.
-    Artifact validation (Day 4) will run before this is served.
+    Returns the final generated DOCX artifact for download.
+    Runs artifact validation BEFORE serving — if validation fails,
+    returns the failure reasons instead of the file so the agent can regenerate.
     """
     output_dir = os.path.join(WORKSPACE_DIR, job_id, "output")
     if not os.path.exists(output_dir):
         raise HTTPException(status_code=404, detail="No artifact found for this job yet.")
 
-    # Find the first file in the output directory
-    files = os.listdir(output_dir)
+    files = [f for f in os.listdir(output_dir) if f.endswith(".docx")]
     if not files:
-        raise HTTPException(status_code=404, detail="Output directory is empty.")
+        raise HTTPException(status_code=404, detail="No .docx artifact found in output directory.")
 
     artifact_path = os.path.join(output_dir, files[0])
+
+    # Run validation gate before handing to human
+    validation = validate_artifact(artifact_path, task_type=task_type)
+    if not validation["valid"]:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "message": "Artifact failed validation. Regeneration required.",
+                "validation": validation
+            }
+        )
+
     return FileResponse(path=artifact_path, filename=files[0])
+
+
+# ─────────────────────────────────────────────
+# ENDPOINT 9: Validate Artifact Manually
+# ─────────────────────────────────────────────
+
+class ValidateRequest(BaseModel):
+    job_id: str
+    task_type: str = "report"   # defaults to report if not specified
+
+@app.post("/validate_artifact")
+def validate_artifact_endpoint(request: ValidateRequest):
+    """
+    Manually trigger artifact validation for a job.
+    Returns pass/fail for all 3 checks:
+        1. Open Check  — can the file be opened?
+        2. Sections    — are all required headings present?
+        3. Evidence    — are findings cited with sources?
+    """
+    output_dir = os.path.join(WORKSPACE_DIR, request.job_id, "output")
+    if not os.path.exists(output_dir):
+        raise HTTPException(status_code=404, detail="No output directory for this job.")
+
+    files = [f for f in os.listdir(output_dir) if f.endswith(".docx")]
+    if not files:
+        raise HTTPException(status_code=404, detail="No .docx file found to validate.")
+
+    artifact_path = os.path.join(output_dir, files[0])
+    return validate_artifact(artifact_path, task_type=request.task_type)
 
 
 # ─────────────────────────────────────────────

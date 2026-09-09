@@ -116,3 +116,15 @@ This document tracks all major architectural decisions and hardware observations
 - A static policy table was chosen over dynamic rule evaluation for hackathon reliability — deterministic, no ML inference needed, zero chance of policy hallucination.
 - Exposed as `/check_permission` and `/tools/{task_type}` API endpoints so the frontend (Aniket's TracePanel) can display live permission verdicts to the judge.
 
+## Decision 10: Artifact Validation — `backend/artifact_validator.py`
+**Date:** 2026-09-09 | **Author:** Vinit Jha
+**Decision:** Built a 3-check validation pipeline that runs on every generated `.docx` before it is served to the human approval screen: Open Check → Sections Check → Evidence Check.
+**Reasoning:**
+- "Generated ≠ Correct" is one of our 13 core research differentiators. An AI that produces a `.docx` but has missing sections or no cited evidence is worse than no AI — it gives false confidence.
+- The Evidence Check specifically addresses hallucination risk: if no citation keyword is found (e.g., "As per inspection report", "Refer SOP-12"), the document is rejected. The agent must ground every finding in a real source.
+- The Sections Check uses a per-task-type required-headings list so the same validator serves `report`, `summary`, `coding`, and `csv_query` outputs without code duplication.
+- The Open Check catches corrupted or empty files early and avoids misleading errors downstream.
+- The `/artifact/{job_id}` endpoint is now gated — if validation fails it returns HTTP 422 with structured failure reasons so the agent can log exactly what to fix and regenerate.
+- `python-docx` was chosen over parsing raw XML because it handles complex DOCX formatting (tables, nested paragraphs) correctly and is battle-tested.
+
+
