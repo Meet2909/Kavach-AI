@@ -1,5 +1,5 @@
   import { useState } from 'react';
-  import Sidebar from './components/Sidebar';
+  import Sidebar from './components/SIdebar.jsx';
 
   function App() {
     // Master state for the active job
