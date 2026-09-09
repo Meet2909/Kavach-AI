@@ -15,6 +15,12 @@ from agent import execute_agent_loop, AgentMemory
 from sandbox import run_python_in_sandbox, check_sandbox_ready
 from tool_gate import check_permission, get_allowed_tools, Verdict
 from artifact_validator import validate_artifact
+from sovereignty_monitor import (
+    get_sovereignty_status,
+    start_snapshot,
+    end_snapshot,
+    get_process_network_usage
+)
 
 app = FastAPI(
     title="KAVACH-AI API Gateway",
@@ -282,3 +288,45 @@ def get_audit_log(job_id: str):
     with open(audit_file, "r") as f:
         events = json.load(f)
     return {"job_id": job_id, "audit_events": events}
+
+
+# ─────────────────────────────────────────────
+# ENDPOINTS 10-13: Sovereignty Monitor (Day 5)
+# These are the LIVE PROOF endpoints shown to judges
+# ─────────────────────────────────────────────
+
+@app.get("/sovereignty/status")
+def sovereignty_status():
+    """
+    JUDGE ENDPOINT: Returns live network status.
+    Shows bytes sent, active connections, external connections, and air-gap verdict.
+    Polled every 3s by the frontend SovereigntyPanel for the live badge.
+    """
+    return get_sovereignty_status()
+
+
+@app.post("/sovereignty/snapshot/start")
+def sovereignty_snapshot_start():
+    """
+    JUDGE ENDPOINT: Records network baseline BEFORE a task starts.
+    Call this first, then run the AI task, then call /snapshot/end to get the delta proof.
+    """
+    return start_snapshot()
+
+
+@app.post("/sovereignty/snapshot/end")
+def sovereignty_snapshot_end():
+    """
+    JUDGE ENDPOINT: Records network counters AFTER a task and returns the delta.
+    bytes_sent_delta ≈ 0 → proves nothing left the machine during the task.
+    """
+    return end_snapshot()
+
+
+@app.get("/sovereignty/processes")
+def sovereignty_processes():
+    """
+    JUDGE ENDPOINT: Shows which processes have active network connections.
+    Judges can verify only uvicorn + browser are active — nothing is phoning home.
+    """
+    return get_process_network_usage()

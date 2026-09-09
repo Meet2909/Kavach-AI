@@ -128,3 +128,14 @@ This document tracks all major architectural decisions and hardware observations
 - `python-docx` was chosen over parsing raw XML because it handles complex DOCX formatting (tables, nested paragraphs) correctly and is battle-tested.
 
 
+
+## Decision 11: Sovereignty Monitor — `backend/sovereignty_monitor.py`
+**Date:** 2026-09-09 | **Author:** Vinit Jha
+**Decision:** Built a `psutil`-based live network monitor with 4 functions: live status, per-task snapshot start/end delta, and per-process connection audit. Exposed as 4 dedicated judge-facing API endpoints.
+**Reasoning:**
+- The sovereignty claim must be demonstrated with live numbers, not just stated. Judges at SIH will ask for proof — this is it.
+- `psutil` was chosen over `eBPF` because macOS does not support eBPF. `psutil` reads directly from the OS kernel's network counters and works on both Mac and Windows.
+- The `start_snapshot()` / `end_snapshot()` delta pattern is the cleanest proof: judges call start, watch a full task run, call end — `bytes_sent_delta ≈ 0` is undeniable.
+- A 10KB threshold in `end_snapshot()` accounts for LAN-local traffic (Vite HMR, CORS preflight) so no false alarms on a real LAN setup.
+- `get_process_network_usage()` gives judges per-process visibility — only `uvicorn` and `browser` have connections, nothing is phoning home.
+- All four functions are surfaced as `/sovereignty/*` API routes so both the frontend SovereigntyPanel AND a manual Postman call can show proof live during the demo.
