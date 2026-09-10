@@ -7,8 +7,17 @@ import fitz  # PyMuPDF
 import pytesseract
 from PIL import Image
 import io
+import os
 
-OLLAMA_URL = "http://127.0.0.1:11434"
+# Dynamically load the IP address of Laptop 2 from the registry
+REGISTRY_PATH = os.path.join(os.path.dirname(__file__), "model_registry.json")
+try:
+    with open(REGISTRY_PATH, "r") as f:
+        registry = json.load(f)
+        OLLAMA_URL = registry.get("vision", {}).get("host", "http://127.0.0.1:11434")
+except Exception:
+    OLLAMA_URL = "http://127.0.0.1:11434"
+
 VISION_MODEL = "qwen2.5vl:7b"
 
 def run_vision_inference(image_bytes, prompt, model=VISION_MODEL):
