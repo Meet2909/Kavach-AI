@@ -1,0 +1,12 @@
+Equipment_ID,Date,Type,Description,Downtime_Hours,Status,Technician
+PUMP-A,2024-01-10,Mechanical,Seal leakage detected during shift inspection,4.5,RESOLVED,R. Sharma
+PUMP-A,2024-02-14,Electrical,Motor overheat — thermal relay tripped,2.0,RESOLVED,K. Mehta
+PUMP-B,2024-01-22,Mechanical,Bearing wear — vibration above threshold,6.0,RESOLVED,R. Sharma
+PUMP-B,2024-03-05,Mechanical,Impeller cavitation — flow reduced by 30%,8.5,OPEN,V. Joshi
+HEX-01,2024-02-01,Chemical,Fouling on shell side — heat transfer efficiency at 68%,12.0,RESOLVED,P. Nair
+HEX-01,2024-04-20,Mechanical,Tube bundle crack detected in hydro test,24.0,OPEN,P. Nair
+COMPRESSOR-C,2024-01-30,Electrical,Control panel fault — PLC error code E014,1.5,RESOLVED,K. Mehta
+COMPRESSOR-C,2024-03-18,Mechanical,Intercooler leak — stage 2 pressure drop,10.0,RESOLVED,R. Sharma
+VALVE-12,2024-02-28,Mechanical,Globe valve stem packing worn,0.5,RESOLVED,V. Joshi
+VALVE-12,2024-04-10,Mechanical,Actuator failure — valve stuck open,3.0,OPEN,V. Joshi
+PUMP-A,2024-04-30,Mechanical,Repeated seal failure — 3rd incident this quarter,5.5,OPEN,K. Mehta

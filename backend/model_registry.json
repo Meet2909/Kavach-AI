@@ -1,0 +1,20 @@
+{
+  "general": {
+    "model_id": "llama3.1",
+    "backend": "ollama",
+    "host": "http://127.0.0.1:11434",
+    "capabilities": ["chat", "summary", "extraction", "reasoning", "general_qa"]
+  },
+  "vision": {
+    "model_id": "qwen2.5-vl",
+    "backend": "ollama",
+    "host": "http://10.12.142.163:11434",
+    "capabilities": ["ocr", "image_understanding", "p_and_id_analysis"]
+  },
+  "coder": {
+    "model_id": "qwen2.5-coder",
+    "backend": "ollama",
+    "host": "http://10.12.142.163:11434",
+    "capabilities": ["python_execution", "pandas_analysis", "csv_filtering"]
+  }
+}
