@@ -1,86 +1,123 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-const menuItems = [
-  { name: "Dashboard" },
-  { name: "Documents" },
-  { name: "AI Jobs" },
-  { name: "Knowledge" },
-  { name: "Artifacts" },
-  { name: "Audit" },
-  { name: "Network" },
-  { name: "Settings" }
+const DEFAULT_ITEMS = [
+  'Dashboard',            // Overview & stats
+  'Document Intake',      // PDF/Image uploads
+  'Active AI Jobs',       // TracePanel & live execution
+  'Evidence & RAG',       // Day 3: Conflict detection
+  'Artifact Generator',   // Day 4: DOCX creation
+  'Human Approval',       // Tool gating
+  'Security Audit',       // Day 5: Sovereignty & Hashes
+  'Hardware Config'       // Llama/Qwen IPs & VRAM
 ];
 
-export default function Sidebar() {
-  const [activeIndex, setActiveIndex] = useState(0);
+const LineSidebar = ({
+  items = DEFAULT_ITEMS,
+  accentColor = '#c084fc',
+  textColor = '#9ca3af',
+  markerColor = 'rgba(255, 255, 255, 0.15)',
+  showIndex = true,
+  showMarker = true,
+  markerLength = 40,
+  markerGap = 12,
+  itemGap = 18,
+  fontSize = 0.95,
+  defaultActive = 0,
+  onItemClick,
+  className = ''
+}) => {
+  const [activeIndex, setActiveIndex] = useState(defaultActive ?? 0);
+
+  useEffect(() => {
+    if (defaultActive !== null && defaultActive !== undefined) {
+      setActiveIndex(defaultActive);
+    }
+  }, [defaultActive]);
+
+  const handleClick = (index, label) => {
+    setActiveIndex(index);
+    onItemClick?.(index, label);
+  };
 
   return (
-    <>
-      {/* 1. The Hidden SVG Filter from the video */}
-      <svg width="0" height="0" className="absolute pointer-events-none">
-        <filter id="lg">
-          <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" result="n" />
-          <feDisplacementMap in="SourceGraphic" in2="n" scale="4" xChannelSelector="R" yChannelSelector="G" />
-        </filter>
-      </svg>
-
-      {/* 2. The Sidebar with the Glass Effect Applied */}
-      <div 
-        className="h-screen w-64 flex flex-col py-12 px-8 font-sans border-r border-slate-200/50 z-50 relative"
-        style={{
-          // A highly transparent white base so the glass effect is visible
-          backgroundColor: 'rgba(255, 255, 255, 0.4)',
-          // The magic from the video: custom SVG blur + saturate
-          backdropFilter: 'url(#lg) blur(8px) saturate(180%)',
-          WebkitBackdropFilter: 'url(#lg) blur(8px) saturate(180%)', // For Safari compatibility
-          // The inner rim light she added to simulate edge reflection
-          boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.36)'
-        }}
+    <nav
+      className={`relative flex justify-start ${showMarker ? 'pl-8' : ''} ${className}`}
+      style={{
+        '--accent-color': accentColor,
+        '--text-color': textColor,
+        '--marker-color': markerColor,
+        '--item-gap': `${itemGap}px`,
+        '--font-size': `${fontSize}rem`
+      }}
+    >
+      <ul
+        className="m-0 flex list-none flex-col py-2 w-full"
+        style={{ gap: 'var(--item-gap)' }}
       >
-        
-        {/* Centered Navigation List */}
-        <div className="flex-1 w-full flex flex-col justify-center space-y-6 mt-10">
-          {menuItems.map((item, index) => {
-            const isActive = activeIndex === index;
-            const number = String(index + 1).padStart(2, '0'); 
-            
-            return (
-              <div
-                key={index}
-                onClick={() => setActiveIndex(index)}
-                className="flex items-center group cursor-pointer"
-              >
-                {/* The Horizontal Line */}
-                <div 
-                  className={`h-[1px] transition-all duration-300 ease-out mr-4 ${
-                    isActive 
-                      ? "w-12 bg-slate-900" 
-                      : "w-4 bg-slate-300 group-hover:w-8 group-hover:bg-slate-500"
+        {items.map((label, index) => {
+          const isActive = activeIndex === index;
+
+          return (
+            <li
+              key={`${label}-${index}`}
+              onClick={() => handleClick(index, label)}
+              aria-current={isActive ? 'true' : undefined}
+              className={`group relative flex items-center cursor-pointer select-none py-1.5 transition-all duration-200 ${
+                isActive ? 'text-white' : 'text-gray-400 hover:text-gray-200'
+              }`}
+            >
+              {/* Static Indicator Marker Line */}
+              {showMarker && (
+                <span
+                  aria-hidden="true"
+                  className={`absolute -left-8 top-1/2 -translate-y-1/2 h-px transition-all duration-200 ${
+                    isActive
+                      ? 'w-6 bg-purple-400 opacity-100 shadow-[0_0_8px_rgba(192,132,252,0.8)]'
+                      : 'w-3 bg-white/15 opacity-50 group-hover:w-4 group-hover:opacity-80 group-hover:bg-purple-400/60'
                   }`}
-                ></div>
-                
-                {/* The Number */}
-                <span className={`text-xs font-mono mr-4 transition-colors duration-300 ${
-                  isActive 
-                    ? "text-slate-900 font-semibold" 
-                    : "text-slate-400 group-hover:text-slate-600"
-                }`}>
-                  {number}
+                />
+              )}
+
+              {/* Static Content Item */}
+              <span 
+                className="relative inline-flex items-baseline leading-[1.2] transition-colors duration-150"
+                style={{ fontSize: 'var(--font-size)' }}
+              >
+                {/* 2-Digit Index Marker */}
+                {showIndex && (
+                  <span 
+                    className={`mr-3 font-mono text-[0.82em] transition-colors duration-150 ${
+                      isActive 
+                        ? 'text-purple-400 font-bold opacity-100' 
+                        : 'text-gray-500 opacity-60 group-hover:text-purple-300/70 group-hover:opacity-90'
+                    }`}
+                  >
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                )}
+
+                {/* Tab Label */}
+                <span 
+                  className={`font-mono transition-colors duration-150 ${
+                    isActive
+                      ? 'text-white font-bold tracking-wide'
+                      : 'text-gray-400 font-normal group-hover:text-gray-200'
+                  }`}
+                >
+                  {label}
                 </span>
-                
-                {/* The Text Label */}
-                <span className={`text-sm tracking-wide transition-colors duration-300 ${
-                  isActive 
-                    ? "text-slate-900 font-semibold" 
-                    : "text-slate-500 group-hover:text-slate-700"
-                }`}>
-                  {item.name}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </>
+
+                {/* Subtle active pill dot on far right */}
+                {isActive && (
+                  <span className="ml-2.5 w-1.5 h-1.5 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.9)] inline-block self-center"></span>
+                )}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
   );
-}
+};
+
+export default LineSidebar;
