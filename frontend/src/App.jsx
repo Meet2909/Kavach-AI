@@ -1,4 +1,5 @@
-import Sidebar from './components/Sidebar';
+import { useState } from 'react';
+import Sidebar from './components/SIdebar.jsx';
 import Prism from './components/Prism';
 
 export default function App() {
