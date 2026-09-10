@@ -27,10 +27,10 @@ app = FastAPI(
     description="Sovereign AI Orchestrator — No external calls made."
 )
 
-# CORS Middleware — allows Vite frontend (port 5173) to connect
+# CORS Middleware — allows Vite frontend to connect from ANY IP on the LAN
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=["*"],  # Demo Day Fix: Allows Ananya to connect from her IP
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
