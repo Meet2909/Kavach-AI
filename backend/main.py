@@ -6,10 +6,14 @@ from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional, Dict, Any
 
 # Import the state machine that Meet built
 from agent import execute_agent_loop, AgentMemory
+
+# Import router and csv tools
+from router import route_task
+from csv_tool import query_csv, get_csv_schema
 
 # Import Vinit's tools
 from sandbox import run_python_in_sandbox, check_sandbox_ready
@@ -27,10 +31,10 @@ app = FastAPI(
     description="Sovereign AI Orchestrator — No external calls made."
 )
 
-# CORS Middleware — allows Vite frontend (port 5173) to connect
+# CORS Middleware — allows Vite frontend (port 5173, 5174, LAN IPs) to connect
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origin_regex=r"^https?://.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -50,6 +54,18 @@ os.makedirs(WORKSPACE_DIR, exist_ok=True)
 class TaskRequest(BaseModel):
     task_type: str   # e.g. "summary", "coding", "vision", "csv_query"
     prompt: str      # The human's instruction
+
+
+class CsvQueryRequest(BaseModel):
+    file_path: Optional[str] = None
+    filters: Optional[Dict[str, Any]] = None
+    columns: Optional[List[str]] = None
+    max_rows: int = 50
+
+
+class RouteRequest(BaseModel):
+    task_type: str
+    file_type: str = ""
 
 
 # ─────────────────────────────────────────────
@@ -330,3 +346,74 @@ def sovereignty_processes():
     Judges can verify only uvicorn + browser are active — nothing is phoning home.
     """
     return get_process_network_usage()
+
+
+# ─────────────────────────────────────────────
+# ENDPOINT 15: List Jobs
+# ─────────────────────────────────────────────
+
+@app.get("/jobs")
+def list_all_jobs():
+    """Returns a list of all active or completed jobs."""
+    results = []
+    for jid, memory in jobs_db.items():
+        results.append({
+            "job_id": jid,
+            "status": getattr(memory, "status", "unknown"),
+            "current_step": getattr(memory, "current_step", "init"),
+            "tool_calls_count": len(getattr(memory, "tool_calls", [])),
+            "trace_count": len(getattr(memory, "trace_log", [])),
+        })
+    return {"jobs": results}
+
+
+# ─────────────────────────────────────────────
+# ENDPOINT 16 & 17: CSV Evidence RAG
+# ─────────────────────────────────────────────
+
+DEFAULT_CSV_PATH = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "demo_data", "maintenance_history.csv")
+)
+
+@app.get("/csv_schema")
+def get_csv_schema_endpoint(file_path: Optional[str] = None):
+    target_path = file_path or DEFAULT_CSV_PATH
+    res = get_csv_schema(target_path)
+    if res.get("success"):
+        cols = list(res.get("columns", {}).keys()) if isinstance(res.get("columns"), dict) else res.get("columns", [])
+        import pandas as pd
+        try:
+            df = pd.read_csv(target_path)
+            total_rows = len(df)
+        except Exception:
+            total_rows = 0
+        return {
+            "success": True,
+            "file": os.path.basename(target_path),
+            "columns": cols,
+            "column_types": res.get("columns"),
+            "total_rows": total_rows,
+            "sample_row": res.get("sample_row", [])
+        }
+    return res
+
+
+@app.post("/query_csv")
+def query_csv_endpoint(req: CsvQueryRequest):
+    target_path = req.file_path or DEFAULT_CSV_PATH
+    return query_csv(
+        file_path=target_path,
+        filters=req.filters,
+        columns=req.columns,
+        max_rows=req.max_rows
+    )
+
+
+# ─────────────────────────────────────────────
+# ENDPOINT 18: Router Simulation Test
+# ─────────────────────────────────────────────
+
+@app.post("/route")
+def route_task_endpoint(req: RouteRequest):
+    return route_task(req.task_type, req.file_type)
+
