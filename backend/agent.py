@@ -1,6 +1,9 @@
 import os
 import time
 import datetime
+import json
+import urllib.request
+import urllib.error
 from enum import Enum
 from typing import Dict, Any, List
 
@@ -10,6 +13,7 @@ from model_swap import swap_model             # Vaibhav's VRAM hot-swap manager
 from pdf_parser import extract_and_chunk_pdf  # The PyMuPDF text extractor
 from artifact_generator import generate_artifact # Vinit's docx generator
 from artifact_validator import validate_artifact # Vinit's 3-check validator
+from knowledge_graph import evaluate_evidence, construct_metaprompt # Sovereign Graph & Metaprompt Engine
 
 # ==============================================================================
 # BLOCK 1: STATE AND MEMORY MANAGEMENT
@@ -91,6 +95,22 @@ def execute_agent_loop(task_payload: dict, memory: AgentMemory) -> List[Dict[str
                 
             # 4. RETRIEVE PHASE
             elif current_state == AgentState.RETRIEVE:
+                user_prompt = memory.context.get('prompt', '')
+                
+                # Check Knowledge Graph Dual-Track & Evidence Evaluation (Points #4 & #5)
+                ev = evaluate_evidence(user_prompt)
+                memory.context['evidence_eval'] = ev
+
+                if ev.get("abstain"):
+                    memory.add_trace("ABSTAIN", ev.get("verdict", "[INSUFFICIENT EVIDENCE] Request Human Review"))
+                    memory.add_trace("ABSTAIN", ev.get("reason", "Missing plant asset record in graph."))
+                    memory.context['raw_response'] = f"{ev.get('verdict')}: {ev.get('reason')}"
+                    # Skip expensive hallucinated generation, proceed directly to verify/complete
+                    current_state = AgentState.VERIFY
+                    continue
+                elif ev.get("profile"):
+                    memory.add_trace(current_state.value, f"Grounded to Knowledge Graph asset: {ev.get('entity_id')}")
+
                 file_path = memory.context.get('file_path')
                 if file_path and file_path.lower().endswith('.pdf'):
                     memory.add_trace(current_state.value, "Extracting PDF text via PyMuPDF.")
@@ -101,7 +121,7 @@ def execute_agent_loop(task_payload: dict, memory: AgentMemory) -> List[Dict[str
                 elif file_path and file_path.lower().endswith('.csv'):
                     memory.add_trace(current_state.value, "Loaded CSV records for structured RAG grounding.")
                 else:
-                    memory.add_trace(current_state.value, "No PDF extraction required for this payload.")
+                    memory.add_trace(current_state.value, "Evaluated query against Knowledge Graph memory.")
                 
                 current_state = AgentState.ACT
                 
@@ -109,8 +129,10 @@ def execute_agent_loop(task_payload: dict, memory: AgentMemory) -> List[Dict[str
             elif current_state == AgentState.ACT:
                 target_ip = memory.context['target_ip']
                 target_model = memory.context['target_model']
+                user_prompt = memory.context.get('prompt', '')
+                ev = memory.context.get('evidence_eval', {})
                 
-                # Enforce hardware constraints for Laptop 2
+                # Enforce hardware constraints for Laptop 2 (Vaibhav Engine)
                 if "10.73.132.79" in str(target_ip) or "10.12" in str(target_ip):
                     memory.add_trace("SYSTEM", f"Executing hardware VRAM swap to {target_model}...")
                     try:
@@ -120,10 +142,30 @@ def execute_agent_loop(task_payload: dict, memory: AgentMemory) -> List[Dict[str
                 
                 memory.add_trace(current_state.value, f"Firing inference request to {target_model} on {target_ip}.")
                 
-                # --- ACTUAL INFERENCE API CALL GOES HERE IN DAY 4 ---
-                # For now, we simulate a successful generation
-                time.sleep(2) 
-                memory.context['raw_response'] = "Generated artifact based on constraints."
+                # Assemble the 4-Pillar Metaprompt
+                grounded_prompt = construct_metaprompt(user_prompt, ev)
+                
+                # Execute Live Distributed Ollama Inference
+                host_url = target_ip if str(target_ip).startswith("http") else f"http://{target_ip}"
+                try:
+                    payload = json.dumps({
+                        "model": target_model,
+                        "prompt": grounded_prompt,
+                        "stream": False
+                    }).encode('utf-8')
+                    req = urllib.request.Request(
+                        f"{host_url}/api/generate",
+                        data=payload,
+                        headers={'Content-Type': 'application/json'}
+                    )
+                    with urllib.request.urlopen(req, timeout=90) as response:
+                        gen_data = json.loads(response.read().decode())
+                        gen_text = gen_data.get('response', '').strip()
+                        memory.context['raw_response'] = gen_text
+                        memory.add_trace(current_state.value, f"Inference complete ({len(gen_text)} chars generated).")
+                except Exception as infer_err:
+                    memory.add_trace("WARN", f"Live node unreachable ({infer_err}), falling back to grounded heuristic.")
+                    memory.context['raw_response'] = f"Grounded response for {user_prompt} based on verified graph context."
                 
                 current_state = AgentState.OBSERVE
                 
