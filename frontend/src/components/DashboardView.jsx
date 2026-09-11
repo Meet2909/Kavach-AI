@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { 
-  ShieldCheck, Server, Cpu, Database, ArrowRight, Activity, 
-  CheckCircle2, AlertCircle, RefreshCw, Layers, Lock, FileCode, Clock 
+import {
+  ShieldCheck, Server, Cpu, Database, ArrowRight, Activity,
+  CheckCircle2, AlertCircle, RefreshCw, Layers, Lock, FileCode, Clock
 } from 'lucide-react';
 import api from '../api/client.js';
 
@@ -52,7 +52,8 @@ export default function DashboardView({ onNavigateTab }) {
           <h1 className="text-3xl font-bold tracking-tight mt-2 font-mono text-white">
             Industrial Command Center
           </h1>
-          <p className="text-sm text-gray-400 font-mono mt-1">
+          {/* UPDATED: Changed font-mono to font-cabinet */}
+          <p className="text-base text-gray-400 font-cabinet mt-1">
             Deterministic multimodal reasoning & bounded agent orchestration for critical infrastructure.
           </p>
         </div>
@@ -62,7 +63,7 @@ export default function DashboardView({ onNavigateTab }) {
           className="self-start md:self-auto px-4 py-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-xs font-mono text-gray-300 flex items-center space-x-2 transition"
         >
           <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
-          <span>Sync Telemetry</span>
+          <span className="font-stardom">Sync Telemetry</span>
           {lastRefreshed && <span className="text-gray-500">({lastRefreshed})</span>}
         </button>
       </div>
@@ -86,7 +87,8 @@ export default function DashboardView({ onNavigateTab }) {
               Port 8000 · CORS Enabled
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-white/10 text-[11px] font-mono text-gray-400">
+          {/* UPDATED: Changed font-mono to font-cabinet */}
+          <div className="mt-4 pt-3 border-t border-white/10 text-xs font-cabinet text-gray-400">
             {health?.version ? `Version: ${health.version}` : 'Waiting for connection'}
           </div>
         </div>
@@ -108,7 +110,8 @@ export default function DashboardView({ onNavigateTab }) {
               External Connections: <strong className="text-white">{sovereignty?.external_count ?? 0}</strong>
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-white/10 text-[11px] font-mono text-gray-400 truncate">
+          {/* UPDATED: Changed font-mono to font-cabinet */}
+          <div className="mt-4 pt-3 border-t border-white/10 text-xs font-cabinet text-gray-400 truncate">
             {sovereignty?.verdict || 'OS kernel network monitored'}
           </div>
         </div>
@@ -125,7 +128,8 @@ export default function DashboardView({ onNavigateTab }) {
               Dual 6GB RTX 4050 GPUs
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-white/10 text-[11px] font-mono text-gray-400">
+          {/* UPDATED: Changed font-mono to font-cabinet */}
+          <div className="mt-4 pt-3 border-t border-white/10 text-xs font-cabinet text-gray-400">
             Laptop 1: Llama 8B · Laptop 2: Qwen VL/Coder
           </div>
         </div>
@@ -144,7 +148,8 @@ export default function DashboardView({ onNavigateTab }) {
               --network none · 256MB cap
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-white/10 text-[11px] font-mono text-gray-400">
+          {/* UPDATED: Changed font-mono to font-cabinet */}
+          <div className="mt-4 pt-3 border-t border-white/10 text-xs font-cabinet text-gray-400">
             Hard 15s subprocess timeout
           </div>
         </div>
@@ -158,7 +163,7 @@ export default function DashboardView({ onNavigateTab }) {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Quick Action 1: Document Intake */}
-          <div 
+          <div
             onClick={() => onNavigateTab(1)}
             className="p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-purple-500/50 hover:bg-purple-950/20 backdrop-blur-md cursor-pointer transition-all duration-300 group shadow-lg"
           >
@@ -171,13 +176,14 @@ export default function DashboardView({ onNavigateTab }) {
             <div className="text-base font-bold font-mono text-white group-hover:text-purple-200">
               Document Intake & Dispatch
             </div>
-            <p className="text-xs text-gray-400 font-mono mt-2 leading-relaxed">
+            {/* UPDATED: Changed font-mono to font-cabinet */}
+            <p className="text-sm text-gray-400 font-cabinet mt-2 leading-relaxed">
               Upload P&ID blueprints, maintenance logs, or engineering manuals. Triggers rule-based routing to specialist models.
             </p>
           </div>
 
           {/* Quick Action 2: Judge Sovereignty Proof */}
-          <div 
+          <div
             onClick={() => onNavigateTab(6)}
             className="p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-emerald-500/50 hover:bg-emerald-950/20 backdrop-blur-md cursor-pointer transition-all duration-300 group shadow-lg"
           >
@@ -190,13 +196,14 @@ export default function DashboardView({ onNavigateTab }) {
             <div className="text-base font-bold font-mono text-white group-hover:text-emerald-200">
               Live Air-Gap Proof (Judges)
             </div>
-            <p className="text-xs text-gray-400 font-mono mt-2 leading-relaxed">
+            {/* UPDATED: Changed font-mono to font-cabinet */}
+            <p className="text-sm text-gray-400 font-cabinet mt-2 leading-relaxed">
               Execute OS-level baseline snapshot diff: prove bytes_sent_delta ≈ 0 during multimodal task inference.
             </p>
           </div>
 
           {/* Quick Action 3: Human Approval & Tool Gate */}
-          <div 
+          <div
             onClick={() => onNavigateTab(5)}
             className="p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-blue-500/50 hover:bg-blue-950/20 backdrop-blur-md cursor-pointer transition-all duration-300 group shadow-lg"
           >
@@ -209,7 +216,8 @@ export default function DashboardView({ onNavigateTab }) {
             <div className="text-base font-bold font-mono text-white group-hover:text-blue-200">
               Least Privilege Gate & Sandbox
             </div>
-            <p className="text-xs text-gray-400 font-mono mt-2 leading-relaxed">
+            {/* UPDATED: Changed font-mono to font-cabinet */}
+            <p className="text-sm text-gray-400 font-cabinet mt-2 leading-relaxed">
               Audit the static ALLOW/DENY/HUMAN_APPROVAL tool matrix and test python execution in Docker isolation.
             </p>
           </div>
@@ -217,4 +225,4 @@ export default function DashboardView({ onNavigateTab }) {
       </div>
     </div>
   );
-}
+} 

@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
-import { 
-  UploadCloud, File as FileIcon, CheckCircle2, AlertCircle, ArrowRight, 
-  Sparkles, FileText, Image as ImageIcon, Code2, Database, ShieldCheck, RefreshCw 
+import {
+  UploadCloud, File as FileIcon, CheckCircle2, AlertCircle, ArrowRight,
+  Sparkles, FileText, Image as ImageIcon, Code2, Database, ShieldCheck, RefreshCw
 } from 'lucide-react';
 import api from '../api/client.js';
 
@@ -75,6 +75,7 @@ export default function UploadBox({ onTaskStarted }) {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [taskType, setTaskType] = useState('report');
+  const [activePreset, setActivePreset] = useState(PRESET_PROMPTS[0].label);
   const [prompt, setPrompt] = useState(PRESET_PROMPTS[0].text);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -102,8 +103,10 @@ export default function UploadBox({ onTaskStarted }) {
 
   const handlePresetClick = (preset) => {
     setTaskType(preset.type);
+    setActivePreset(preset.label);
     setPrompt(preset.text);
   };
+
 
   const handleSubmit = async () => {
     setError(null);
@@ -142,24 +145,23 @@ export default function UploadBox({ onTaskStarted }) {
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
       {/* Drag & Drop Upload Zone */}
-      <div 
-        className={`relative rounded-2xl border-2 border-dashed transition-all duration-300 p-8 flex flex-col items-center justify-center cursor-pointer overflow-hidden ${
-          isDragging 
-            ? 'border-purple-500 bg-purple-500/10 scale-[1.01]' 
-            : selectedFile
+      <div
+        className={`relative rounded-2xl border-2 border-dashed transition-all duration-300 p-8 flex flex-col items-center justify-center cursor-pointer overflow-hidden ${isDragging
+          ? 'border-purple-500 bg-purple-500/10 scale-[1.01]'
+          : selectedFile
             ? 'border-purple-500/50 bg-purple-950/20 backdrop-blur-md'
             : 'border-white/15 bg-white/5 hover:border-purple-500/40 hover:bg-white/[0.07] backdrop-blur-md'
-        }`}
+          }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
       >
-        <input 
-          type="file" 
-          className="hidden" 
-          ref={fileInputRef} 
-          onChange={handleFileChange} 
+        <input
+          type="file"
+          className="hidden"
+          ref={fileInputRef}
+          onChange={handleFileChange}
           accept=".pdf,.png,.jpg,.jpeg,.csv,.docx,.txt"
         />
 
@@ -187,7 +189,7 @@ export default function UploadBox({ onTaskStarted }) {
             </div>
             <div>
               <p className="font-mono text-base font-semibold text-white">Drag & drop engineering artifact, or browse</p>
-              <p className="text-xs text-gray-400 font-mono mt-1">
+              <p className="text-sm text-gray-400 font-cabinet mt-1">
                 Supports P&ID Diagrams (.png, .jpg), Plant Standards (.pdf), Maintenance Logs (.csv)
               </p>
             </div>
@@ -197,7 +199,7 @@ export default function UploadBox({ onTaskStarted }) {
 
       {/* Task Type Selector Grid */}
       <div className="space-y-3">
-        <label className="block text-xs font-mono font-semibold tracking-wider text-gray-400 uppercase">
+        <label className="block text-sm font-cabinet font-semibold tracking-wider text-gray-400 uppercase">
           1. Select Autonomous Agent Pipeline
         </label>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -208,12 +210,23 @@ export default function UploadBox({ onTaskStarted }) {
               <button
                 key={opt.id}
                 type="button"
-                onClick={() => setTaskType(opt.id)}
-                className={`p-3.5 rounded-xl text-left transition-all duration-200 border flex flex-col justify-between ${
-                  isSelected
-                    ? 'border-purple-500 bg-purple-500/15 shadow-[0_0_20px_rgba(168,85,247,0.2)]'
-                    : 'border-white/10 bg-black/30 hover:border-white/25 hover:bg-white/5'
-                }`}
+                onClick={() => {
+                  setTaskType(opt.id);
+                  const matchedPreset = PRESET_PROMPTS.find(p => p.type === opt.id);
+
+                  if (matchedPreset) {
+                    setActivePreset(matchedPreset.label);
+                    setPrompt(matchedPreset.text);
+                  } else {
+                    setActivePreset(null);
+                    setPrompt('');
+                  }
+                }}
+
+                className={`p-3.5 rounded-xl text-left transition-all duration-200 border flex flex-col justify-between ${isSelected
+                  ? 'border-purple-500 bg-purple-500/15 shadow-[0_0_20px_rgba(168,85,247,0.2)]'
+                  : 'border-white/10 bg-black/30 hover:border-white/25 hover:bg-white/5'
+                  }`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className={`p-2 rounded-lg ${isSelected ? 'bg-purple-500/30 text-purple-200' : 'bg-white/5 text-gray-400'}`}>
@@ -226,7 +239,7 @@ export default function UploadBox({ onTaskStarted }) {
                 <div>
                   <div className="font-mono font-semibold text-sm text-white">{opt.label}</div>
                   <div className="text-xs text-gray-400 mt-1 leading-snug">{opt.desc}</div>
-                  <div className="text-[11px] font-mono text-purple-400 mt-2 font-medium">Node: {opt.model}</div>
+                  <div className="text-xs font-cabinet text-purple-400 mt-2 font-medium">Node: {opt.model}</div>
                 </div>
               </button>
             );
@@ -247,17 +260,26 @@ export default function UploadBox({ onTaskStarted }) {
         </div>
 
         {/* Preset Prompt Pills */}
+        {/* Preset Prompt Pills */}
         <div className="flex flex-wrap gap-2">
-          {PRESET_PROMPTS.map((preset, idx) => (
-            <button
-              key={idx}
-              type="button"
-              onClick={() => handlePresetClick(preset)}
-              className="text-xs font-mono px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-purple-500/20 hover:border-purple-500/40 text-gray-300 transition"
-            >
-              {preset.label}
-            </button>
-          ))}
+          {PRESET_PROMPTS.map((preset, idx) => {
+            // Add the missing visual check!
+            const isActive = activePreset === preset.label;
+
+            return (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => handlePresetClick(preset)}
+                className={`text-sm font-cabinet px-3 py-1.5 rounded-lg border transition ${isActive
+                    ? 'bg-purple-500/30 border-purple-500/50 text-purple-200 shadow-[0_0_10px_rgba(168,85,247,0.2)]'
+                    : 'border-white/10 bg-white/5 hover:bg-purple-500/20 hover:border-purple-500/40 text-gray-300'
+                  }`}
+              >
+                {preset.label}
+              </button>
+            );
+          })}
         </div>
 
         <textarea
@@ -265,7 +287,7 @@ export default function UploadBox({ onTaskStarted }) {
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           placeholder="Enter prompt instructions for the autonomous agent loop..."
-          className="w-full p-4 rounded-xl bg-black/40 border border-white/15 focus:border-purple-500 focus:outline-none font-mono text-sm text-gray-200 placeholder-gray-600 backdrop-blur-sm transition"
+          className="w-full p-4 rounded-xl bg-black/40 border border-white/15 focus:border-purple-500 focus:outline-none font-stardom text-base text-gray-200 placeholder-gray-600 backdrop-blur-sm transition"
         />
       </div>
 
@@ -279,7 +301,7 @@ export default function UploadBox({ onTaskStarted }) {
 
       {/* Submit Action Button */}
       <div className="flex justify-end items-center space-x-4 pt-2">
-        <div className="text-xs text-gray-400 font-mono flex items-center space-x-1.5">
+        <div className="text-sm text-gray-400 font-stardom flex items-center space-x-1.5">
           <ShieldCheck size={14} className="text-green-400" />
           <span>Least-Privilege Tool Gate Armed</span>
         </div>
@@ -304,4 +326,4 @@ export default function UploadBox({ onTaskStarted }) {
       </div>
     </div>
   );
-}
+} 

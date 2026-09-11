@@ -163,14 +163,11 @@ export default function App() {
         <aside className="w-[300px] shrink-0 h-full border-r border-white/10 bg-black/60 backdrop-blur-2xl flex flex-col justify-between shadow-[15px_0_35px_rgba(0,0,0,0.6)]">
           {/* Logo & Header */}
           <div className="p-8 pb-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 rounded-xl bg-purple-600/30 border border-purple-500/40 text-purple-300">
-                <ShieldCheck size={22} />
+            <div className="flex flex-col">
+              <div className="flex items-center">
+                <span className="font-stardom text-2xl tracking-widest text-white">कAVACH</span>
               </div>
-              <div>
-                <div className="text-sm font-bold tracking-widest text-white uppercase font-mono">KAVACH-AI</div>
-                <div className="text-[10px] text-purple-400 font-mono tracking-wider">SOVEREIGN AIR-GAP OS</div>
-              </div>
+              <div className="text-[10px] text-purple-400 font-mono tracking-wider mt-1">SOVEREIGN AIR-GAP OS</div>
             </div>
           </div>
 
@@ -203,9 +200,9 @@ export default function App() {
           {/* Top Operational Bar */}
           <header className="h-16 px-10 border-b border-white/10 bg-black/30 backdrop-blur-md flex items-center justify-between shrink-0">
             <div className="flex items-center space-x-4 text-xs font-mono text-gray-400">
-              <span className="text-gray-200 font-semibold">Petroleum Infrastructure Cluster</span>
+              <span className="text-gray-200 font-semibold font-stardom text-xl">Petroleum Infrastructure Cluster</span>
               <span className="text-white/20">|</span>
-              <span>MRPL Refinery Node</span>
+              <span className="font-stardom text-base">MRPL Refinery Node</span>
               {currentJobId && (
                 <>
                   <span className="text-white/20">|</span>
@@ -220,11 +217,11 @@ export default function App() {
             <div className="flex items-center space-x-3 text-xs font-mono">
               <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300 flex items-center space-x-2">
                 <Server size={12} className="text-purple-400" />
-                <span>Dual GPU Cluster (6GB x2)</span>
+                <span className="font-stardom">Dual GPU Cluster (6GB x2)</span>
               </div>
               <div className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 flex items-center space-x-1.5">
                 <ShieldCheck size={13} />
-                <span>Zero Telemetry</span>
+                <span className="font-stardom">Zero Telemetry</span>
               </div>
             </div>
           </header>
