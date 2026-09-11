@@ -1,8 +1,8 @@
 {
   "general": {
-    "model_id": "llama3.1",
+    "model_id": "llama3.1:latest",
     "backend": "ollama",
-    "host": "http://127.0.0.1:11434",
+    "host": "http://10.73.132.136:11434",
     "capabilities": [
       "chat",
       "summary",
@@ -12,7 +12,7 @@
     ]
   },
   "vision": {
-    "model_id": "qwen2.5-vl",
+    "model_id": "qwen2.5vl:7b",
     "backend": "ollama",
     "host": "http://10.73.132.79:11434",
     "capabilities": [
@@ -22,7 +22,7 @@
     ]
   },
   "coder": {
-    "model_id": "qwen2.5-coder",
+    "model_id": "qwen2.5-coder:7b",
     "backend": "ollama",
     "host": "http://10.73.132.79:11434",
     "capabilities": [
