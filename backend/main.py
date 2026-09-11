@@ -179,10 +179,16 @@ def start_task(job_id: str, request: TaskRequest, background_tasks: BackgroundTa
     memory = AgentMemory()
     jobs_db[job_id] = memory
 
+    input_dir = os.path.join(job_dir, "input")
+    files_in_input = [f for f in os.listdir(input_dir) if not f.startswith('.')] if os.path.exists(input_dir) else []
+    actual_file_path = os.path.join(input_dir, files_in_input[0]) if files_in_input else input_dir
+
     payload = {
         "type": request.task_type,
         "prompt": request.prompt,
-        "file_path": os.path.join(job_dir, "input")
+        "file_path": actual_file_path,
+        "input_dir": input_dir,
+        "files": files_in_input
     }
 
     # Fire the agent state machine in a background thread

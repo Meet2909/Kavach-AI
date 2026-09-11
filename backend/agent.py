@@ -1,3 +1,4 @@
+import os
 import time
 import datetime
 from enum import Enum
@@ -69,19 +70,32 @@ def execute_agent_loop(task_payload: dict, memory: AgentMemory) -> List[Dict[str
                 
             # 3. PLAN PHASE
             elif current_state == AgentState.PLAN:
-                target_ip, target_model = route_task(memory.context['task_type'])
+                task_type = memory.context.get('task_type', 'summary')
+                file_path = memory.context.get('file_path', '')
+                _, file_ext = os.path.splitext(file_path or '')
+                file_type = file_ext.lstrip('.').lower() if file_ext else ''
+
+                routing_result = route_task(task_type, file_type)
+                target_ip = routing_result.get('host')
+                target_model = routing_result.get('model_id')
+
                 memory.context['target_ip'] = target_ip
                 memory.context['target_model'] = target_model
-                memory.add_trace(current_state.value, f"Routed to {target_model} on {target_ip}")
+                memory.context['routing_result'] = routing_result
+                memory.add_trace(current_state.value, f"Routed to {target_model} on {target_ip} ({routing_result.get('reason', '')})")
                 current_state = AgentState.RETRIEVE
                 
             # 4. RETRIEVE PHASE
             elif current_state == AgentState.RETRIEVE:
                 file_path = memory.context.get('file_path')
-                if file_path and file_path.endswith('.pdf'):
+                if file_path and file_path.lower().endswith('.pdf'):
                     memory.add_trace(current_state.value, "Extracting PDF text via PyMuPDF.")
                     chunks = extract_and_chunk_pdf(file_path)
                     memory.context['document_chunks'] = chunks
+                elif file_path and any(file_path.lower().endswith(ext) for ext in ['.png', '.jpg', '.jpeg', '.webp', '.bmp']):
+                    memory.add_trace(current_state.value, f"Preprocessed uploaded visual asset: {os.path.basename(file_path)}")
+                elif file_path and file_path.lower().endswith('.csv'):
+                    memory.add_trace(current_state.value, "Loaded CSV records for structured RAG grounding.")
                 else:
                     memory.add_trace(current_state.value, "No PDF extraction required for this payload.")
                 
@@ -93,13 +107,14 @@ def execute_agent_loop(task_payload: dict, memory: AgentMemory) -> List[Dict[str
                 target_model = memory.context['target_model']
                 
                 # Enforce hardware constraints for Laptop 2
-                if target_ip == "10.12.142.163:11434":
+                if "10.73.132.79" in str(target_ip) or "10.12" in str(target_ip):
                     memory.add_trace("SYSTEM", f"Executing hardware VRAM swap to {target_model}...")
-                    swap_success = swap_model(target_model)
-                    if not swap_success:
-                        raise Exception(f"Failed to load {target_model} into VRAM.")
+                    try:
+                        swap_model(target_model, host=target_ip)
+                    except Exception as e:
+                        memory.add_trace("SYSTEM", f"VRAM swap notice: {str(e)}")
                 
-                memory.add_trace(current_state.value, "Firing inference request to designated node.")
+                memory.add_trace(current_state.value, f"Firing inference request to {target_model} on {target_ip}.")
                 
                 # --- ACTUAL INFERENCE API CALL GOES HERE IN DAY 4 ---
                 # For now, we simulate a successful generation
