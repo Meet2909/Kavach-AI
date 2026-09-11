@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   ShieldCheck, Server, Cpu, Database, ArrowRight, Activity, 
   CheckCircle2, AlertCircle, RefreshCw, Layers, Lock, FileCode, Clock 
@@ -37,6 +37,10 @@ export default function DashboardView({ onNavigateTab }) {
 
   return (
     <div className="space-y-8 animate-fade-in-up">
+      <div className="dashboard-wordmark-wrap">
+        <div className="dashboard-wordmark">KAVACH</div>
+      </div>
+
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-white/10 pb-6">
         <div>

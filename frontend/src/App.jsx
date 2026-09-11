@@ -10,7 +10,7 @@ import HumanApproval from './components/HumanApproval.jsx';
 import SecurityAuditView from './components/SecurityAuditView.jsx';
 import HardwareConfigView from './components/HardwareConfigView.jsx';
 import api from './api/client.js';
-import { ShieldCheck, Server, Activity, ChevronRight } from 'lucide-react';
+import { ShieldCheck, Activity, ChevronRight } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState(0);
@@ -138,38 +138,38 @@ export default function App() {
   };
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-[#060608] text-white select-none">
+    <div className="relative w-screen h-screen overflow-hidden bg-[#0b0d12] text-white select-none">
       
       {/* 3D WebGL PRISM BACKGROUND */}
-      <div className="fixed inset-0 w-full h-full pointer-events-none z-0 opacity-40">
+      <div className="fixed inset-0 w-full h-full pointer-events-none z-0 opacity-60">
         <Prism
-          height={4}
-          baseWidth={5}
+          height={4.6}
+          baseWidth={6.2}
           animationType="3drotate"
-          glow={0.5}
-          noise={0.1}
+          glow={0.7}
+          noise={0.12}
           transparent
-          scale={1.3} 
+          scale={1.5}
           hueShift={0}
           colorFrequency={2.8}
-          timeScale={0.12} 
+          timeScale={0.14}
         />
       </div>
 
       {/* FOREGROUND LAYOUT */}
-      <div className="relative z-10 flex w-full h-full bg-black/40">
+      <div className="relative z-10 flex w-full h-full bg-black/20">
         
         {/* COLLAPSIBLE / DOCKED FROSTED SIDEBAR */}
         <aside className="w-[300px] shrink-0 h-full border-r border-white/10 bg-black/60 backdrop-blur-2xl flex flex-col justify-between shadow-[15px_0_35px_rgba(0,0,0,0.6)]">
           {/* Logo & Header */}
           <div className="p-8 pb-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 rounded-xl bg-purple-600/30 border border-purple-500/40 text-purple-300">
-                <ShieldCheck size={22} />
+            <div className="flex items-center gap-3">
+              <div className="brand-icon-wrap">
+                <ShieldCheck size={20} />
               </div>
-              <div>
-                <div className="text-sm font-bold tracking-widest text-white uppercase font-mono">KAVACH-AI</div>
-                <div className="text-[10px] text-purple-400 font-mono tracking-wider">SOVEREIGN AIR-GAP OS</div>
+              <div className="brand-mark-wrap">
+                <div className="brand-mark">KAVACH</div>
+                <div className="brand-subtitle">SOVEREIGN AIR-GAP OS</div>
               </div>
             </div>
           </div>
@@ -199,7 +199,7 @@ export default function App() {
         </aside>
 
         {/* MAIN CONTENT AREA */}
-        <main className="flex-1 h-full overflow-y-auto flex flex-col">
+        <main className="main-scroll-panel flex-1 h-full overflow-y-auto flex flex-col">
           {/* Top Operational Bar */}
           <header className="h-16 px-10 border-b border-white/10 bg-black/30 backdrop-blur-md flex items-center justify-between shrink-0">
             <div className="flex items-center space-x-4 text-xs font-mono text-gray-400">
@@ -217,15 +217,8 @@ export default function App() {
               )}
             </div>
 
-            <div className="flex items-center space-x-3 text-xs font-mono">
-              <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300 flex items-center space-x-2">
-                <Server size={12} className="text-purple-400" />
-                <span>Dual GPU Cluster (6GB x2)</span>
-              </div>
-              <div className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 flex items-center space-x-1.5">
-                <ShieldCheck size={13} />
-                <span>Zero Telemetry</span>
-              </div>
+            <div className="flex items-center space-x-3 text-xs font-mono" aria-hidden="true">
+              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             </div>
           </header>
 

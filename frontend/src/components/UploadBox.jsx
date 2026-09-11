@@ -75,6 +75,7 @@ export default function UploadBox({ onTaskStarted }) {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [taskType, setTaskType] = useState('report');
+  const [selectedPreset, setSelectedPreset] = useState(PRESET_PROMPTS[0].label);
   const [prompt, setPrompt] = useState(PRESET_PROMPTS[0].text);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -100,8 +101,20 @@ export default function UploadBox({ onTaskStarted }) {
     }
   };
 
+  const handleTaskSelection = (nextType) => {
+    setTaskType(nextType);
+    const matchedPreset = PRESET_PROMPTS.find((preset) => preset.type === nextType);
+    if (matchedPreset) {
+      setSelectedPreset(matchedPreset.label);
+      setPrompt(matchedPreset.text);
+    } else {
+      setSelectedPreset(null);
+    }
+  };
+
   const handlePresetClick = (preset) => {
     setTaskType(preset.type);
+    setSelectedPreset(preset.label);
     setPrompt(preset.text);
   };
 
@@ -208,7 +221,7 @@ export default function UploadBox({ onTaskStarted }) {
               <button
                 key={opt.id}
                 type="button"
-                onClick={() => setTaskType(opt.id)}
+                onClick={() => handleTaskSelection(opt.id)}
                 className={`p-3.5 rounded-xl text-left transition-all duration-200 border flex flex-col justify-between ${
                   isSelected
                     ? 'border-purple-500 bg-purple-500/15 shadow-[0_0_20px_rgba(168,85,247,0.2)]'
@@ -248,16 +261,24 @@ export default function UploadBox({ onTaskStarted }) {
 
         {/* Preset Prompt Pills */}
         <div className="flex flex-wrap gap-2">
-          {PRESET_PROMPTS.map((preset, idx) => (
-            <button
-              key={idx}
-              type="button"
-              onClick={() => handlePresetClick(preset)}
-              className="text-xs font-mono px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-purple-500/20 hover:border-purple-500/40 text-gray-300 transition"
-            >
-              {preset.label}
-            </button>
-          ))}
+          {PRESET_PROMPTS.map((preset, idx) => {
+            const isSelected = selectedPreset === preset.label;
+
+            return (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => handlePresetClick(preset)}
+                className={`text-xs font-mono px-3 py-1.5 rounded-lg border transition ${
+                  isSelected
+                    ? 'border-purple-500 bg-purple-500/20 text-white shadow-[0_0_18px_rgba(168,85,247,0.2)]'
+                    : 'border-white/10 bg-white/5 hover:bg-purple-500/20 hover:border-purple-500/40 text-gray-300'
+                }`}
+              >
+                {preset.label}
+              </button>
+            );
+          })}
         </div>
 
         <textarea
