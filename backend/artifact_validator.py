@@ -69,6 +69,22 @@ REQUIRED_SECTIONS: dict[str, list[str]] = {
         "analysis",
         "findings",
     ],
+
+    # Vision / P&ID visual inspection deliverable
+    "vision": [
+        "inspection date",
+        "equipment",
+        "key findings",
+        "recommendation",
+        "approval",
+    ],
+    "p&id": [
+        "inspection date",
+        "equipment",
+        "key findings",
+        "recommendation",
+        "approval",
+    ],
 }
 
 # Minimum word count — a 3-word doc is not a real deliverable

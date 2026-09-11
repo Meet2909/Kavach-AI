@@ -8,6 +8,8 @@ from typing import Dict, Any, List
 from router import route_task                 # Piyush's deterministic router
 from model_swap import swap_model             # Vaibhav's VRAM hot-swap manager
 from pdf_parser import extract_and_chunk_pdf  # The PyMuPDF text extractor
+from artifact_generator import generate_artifact # Vinit's docx generator
+from artifact_validator import validate_artifact # Vinit's 3-check validator
 
 # ==============================================================================
 # BLOCK 1: STATE AND MEMORY MANAGEMENT
@@ -65,7 +67,9 @@ def execute_agent_loop(task_payload: dict, memory: AgentMemory) -> List[Dict[str
             # 2. INTAKE PHASE
             if current_state == AgentState.INTAKE:
                 memory.context['task_type'] = task_payload.get("type", "summary")
+                memory.context['prompt'] = task_payload.get("prompt", "")
                 memory.context['file_path'] = task_payload.get("file_path", None)
+                memory.context['job_dir'] = task_payload.get("job_dir", None)
                 current_state = AgentState.PLAN
                 
             # 3. PLAN PHASE
@@ -130,16 +134,34 @@ def execute_agent_loop(task_payload: dict, memory: AgentMemory) -> List[Dict[str
                 
             # 7. VERIFY PHASE
             elif current_state == AgentState.VERIFY:
-                # --- ACTUAL HALLUCINATION CHECK GOES HERE IN DAY 4 ---
-                is_valid = True 
+                job_dir = memory.context.get('job_dir')
+                task_type = memory.context.get('task_type', 'report')
                 
-                if is_valid:
+                if job_dir:
+                    memory.add_trace(current_state.value, "Generating industrial inspection artifact (.docx)...")
+                    artifact_path = generate_artifact(
+                        job_dir=job_dir,
+                        task_type=task_type,
+                        prompt=memory.context.get('prompt', ''),
+                        file_path=memory.context.get('file_path', ''),
+                        context=memory.context
+                    )
+                    
+                    # 3-Check Validation Gate (Decision 10: Generated != Correct)
+                    validation = validate_artifact(artifact_path, task_type=task_type)
+                    memory.context['validation'] = validation
+                    memory.context['artifact_path'] = artifact_path
+                    
+                    if validation.get("valid"):
+                        current_state = AgentState.COMPLETED
+                        memory.add_trace(current_state.value, f"Deliverable validated (3/3 checks passed: {os.path.basename(artifact_path)}).")
+                    else:
+                        memory.retry_count += 1
+                        current_state = AgentState.PLAN
+                        memory.add_trace(current_state.value, f"Validation failed ({validation.get('failures')}). Initiating bounded retry {memory.retry_count}.")
+                else:
                     current_state = AgentState.COMPLETED
                     memory.add_trace(current_state.value, "Artifact mathematically/logically verified.")
-                else:
-                    memory.retry_count += 1
-                    current_state = AgentState.PLAN 
-                    memory.add_trace(current_state.value, f"Verification failed. Initiating retry {memory.retry_count}.")
 
         except Exception as e:
             memory.add_trace("FAILED", f"System exception caught: {str(e)}")

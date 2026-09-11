@@ -19,6 +19,7 @@ from csv_tool import query_csv, get_csv_schema
 from sandbox import run_python_in_sandbox, check_sandbox_ready
 from tool_gate import check_permission, get_allowed_tools, Verdict
 from artifact_validator import validate_artifact
+from artifact_generator import generate_artifact
 from sovereignty_monitor import (
     get_sovereignty_status,
     start_snapshot,
@@ -184,6 +185,8 @@ def start_task(job_id: str, request: TaskRequest, background_tasks: BackgroundTa
     actual_file_path = os.path.join(input_dir, files_in_input[0]) if files_in_input else input_dir
 
     payload = {
+        "job_id": job_id,
+        "job_dir": job_dir,
         "type": request.task_type,
         "prompt": request.prompt,
         "file_path": actual_file_path,
@@ -240,12 +243,17 @@ def get_artifact(job_id: str, task_type: str = "report"):
     returns the failure reasons instead of the file so the agent can regenerate.
     """
     output_dir = os.path.join(WORKSPACE_DIR, job_id, "output")
-    if not os.path.exists(output_dir):
-        raise HTTPException(status_code=404, detail="No artifact found for this job yet.")
-
-    files = [f for f in os.listdir(output_dir) if f.endswith(".docx")]
+    files = [f for f in os.listdir(output_dir) if f.endswith(".docx")] if os.path.exists(output_dir) else []
+    
+    # Auto-generate if missing for active/completed jobs
     if not files:
-        raise HTTPException(status_code=404, detail="No .docx artifact found in output directory.")
+        job_dir = os.path.join(WORKSPACE_DIR, job_id)
+        if os.path.exists(job_dir):
+            generate_artifact(job_dir, task_type=task_type)
+            files = [f for f in os.listdir(output_dir) if f.endswith(".docx")] if os.path.exists(output_dir) else []
+
+    if not files:
+        raise HTTPException(status_code=404, detail="No artifact found for this job yet.")
 
     artifact_path = os.path.join(output_dir, files[0])
 
@@ -281,12 +289,17 @@ def validate_artifact_endpoint(request: ValidateRequest):
         3. Evidence    — are findings cited with sources?
     """
     output_dir = os.path.join(WORKSPACE_DIR, request.job_id, "output")
-    if not os.path.exists(output_dir):
-        raise HTTPException(status_code=404, detail="No output directory for this job.")
+    files = [f for f in os.listdir(output_dir) if f.endswith(".docx")] if os.path.exists(output_dir) else []
 
-    files = [f for f in os.listdir(output_dir) if f.endswith(".docx")]
+    # Auto-generate if missing
     if not files:
-        raise HTTPException(status_code=404, detail="No .docx file found to validate.")
+        job_dir = os.path.join(WORKSPACE_DIR, request.job_id)
+        if os.path.exists(job_dir):
+            generate_artifact(job_dir, task_type=request.task_type)
+            files = [f for f in os.listdir(output_dir) if f.endswith(".docx")] if os.path.exists(output_dir) else []
+
+    if not files:
+        raise HTTPException(status_code=404, detail="No output directory for this job.")
 
     artifact_path = os.path.join(output_dir, files[0])
     return validate_artifact(artifact_path, task_type=request.task_type)
