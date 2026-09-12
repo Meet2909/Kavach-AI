@@ -64,7 +64,7 @@ export default function EvidenceRagView() {
         <h1 className="text-3xl font-bold tracking-tight mt-2 font-mono text-white">
           Evidence & Historical RAG
         </h1>
-        <p className="text-sm text-gray-400 font-mono mt-1">
+        <p className="text-base text-gray-400 font-mono mt-1 leading-relaxed">
           Grounds LLM responses in real plant records (maintenance_history.csv) without SQL servers or external telemetry.
         </p>
       </div>
@@ -72,11 +72,11 @@ export default function EvidenceRagView() {
       {/* CSV Introspection & Filter Bar */}
       <div className="p-6 rounded-2xl bg-black/40 border border-white/10 backdrop-blur-md shadow-xl space-y-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex items-center space-x-2 text-sm font-mono font-semibold text-white">
+          <div className="flex items-center space-x-2 text-base font-mono font-semibold text-white">
             <Database size={18} className="text-amber-400" />
             <span>Target: maintenance_history.csv</span>
             {schema && (
-              <span className="text-xs text-gray-400">
+              <span className="text-sm text-gray-400">
                 ({schema.total_rows} total records · {schema.columns.length} columns)
               </span>
             )}
@@ -88,7 +88,7 @@ export default function EvidenceRagView() {
                 setFilterVal('PUMP-A');
                 handleQuery();
               }}
-              className="text-xs font-mono px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 transition"
+              className="text-sm font-mono px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 transition"
             >
               Preset: PUMP-A
             </button>
@@ -98,7 +98,7 @@ export default function EvidenceRagView() {
                 setFilterVal('FAILED');
                 handleQuery();
               }}
-              className="text-xs font-mono px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 transition"
+              className="text-sm font-mono px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 transition"
             >
               Preset: FAILED
             </button>
@@ -108,11 +108,11 @@ export default function EvidenceRagView() {
         {/* Filter Controls */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
-            <label className="block text-xs font-mono text-gray-400 mb-1">Filter Column</label>
+            <label className="block text-sm font-mono text-gray-400 mb-1">Filter Column</label>
             <select
               value={filterKey}
               onChange={(e) => setFilterKey(e.target.value)}
-              className="w-full p-2.5 rounded-xl bg-black/50 border border-white/15 font-mono text-xs text-white focus:outline-none focus:border-amber-400"
+              className="w-full p-2.5 rounded-xl bg-black/50 border border-white/15 font-mono text-sm text-white focus:outline-none focus:border-amber-400"
             >
               {schema ? (
                 schema.columns.map((col) => (
@@ -125,13 +125,13 @@ export default function EvidenceRagView() {
           </div>
 
           <div>
-            <label className="block text-xs font-mono text-gray-400 mb-1">Filter Value</label>
+            <label className="block text-sm font-mono text-gray-400 mb-1">Filter Value</label>
             <input
               type="text"
               value={filterVal}
               onChange={(e) => setFilterVal(e.target.value)}
               placeholder="e.g. PUMP-A, FAILED, VALVE-101"
-              className="w-full p-2.5 rounded-xl bg-black/50 border border-white/15 font-mono text-xs text-white focus:outline-none focus:border-amber-400"
+              className="w-full p-2.5 rounded-xl bg-black/50 border border-white/15 font-mono text-sm text-white focus:outline-none focus:border-amber-400"
             />
           </div>
 
@@ -139,7 +139,7 @@ export default function EvidenceRagView() {
             <button
               onClick={handleQuery}
               disabled={loading}
-              className="w-full py-2.5 px-4 rounded-xl font-mono text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white flex items-center justify-center space-x-2 transition cursor-pointer disabled:opacity-50"
+              className="w-full py-2.5 px-4 rounded-xl font-mono text-sm font-bold bg-amber-600 hover:bg-amber-500 text-white flex items-center justify-center space-x-2 transition cursor-pointer disabled:opacity-50"
             >
               <Search size={14} className={loading ? 'animate-spin' : ''} />
               <span>{loading ? 'Querying Pandas...' : 'Query Plant Records'}</span>
@@ -148,7 +148,7 @@ export default function EvidenceRagView() {
         </div>
 
         {error && (
-          <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs font-mono flex items-center space-x-2">
+          <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-sm font-mono flex items-center space-x-2">
             <AlertCircle size={14} />
             <span>{error}</span>
           </div>
@@ -159,7 +159,7 @@ export default function EvidenceRagView() {
       {results && (
         <div className="space-y-4">
           {/* Summary Box */}
-          <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs font-mono flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-sm font-mono flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <CheckCircle2 size={16} className="text-amber-400 shrink-0" />
               <span>{results.summary || `Matched ${results.count} records in local Pandas engine.`}</span>
@@ -172,7 +172,7 @@ export default function EvidenceRagView() {
           {/* Table of Matched Records */}
           <div className="rounded-2xl border border-white/10 bg-black/50 backdrop-blur-md overflow-hidden shadow-xl">
             <div className="overflow-x-auto max-h-[400px]">
-              <table className="w-full text-left font-mono text-xs">
+              <table className="w-full text-left font-mono text-sm">
                 <thead className="bg-white/5 border-b border-white/10 text-gray-400 sticky top-0">
                   <tr>
                     {results.rows.length > 0 && Object.keys(results.rows[0]).map((col) => (
@@ -199,11 +199,11 @@ export default function EvidenceRagView() {
 
       {/* Hallucination Prevention Proof Card */}
       <div className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md space-y-3">
-        <div className="flex items-center space-x-2 text-sm font-mono font-bold text-white">
+        <div className="flex items-center space-x-2 text-base font-mono font-bold text-white">
           <ShieldCheck size={18} className="text-emerald-400" />
           <span>Research Differentiator: Anti-Hallucination Grounding</span>
         </div>
-        <p className="text-xs text-gray-400 font-mono leading-relaxed">
+        <p className="text-sm text-gray-400 font-mono leading-relaxed">
           The agent loop executes <code className="text-amber-300">get_csv_schema()</code> during the <strong>PLAN</strong> phase so the model knows verified column headers before generating Pandas filter predicates. If the query yields zero records, the model abstains rather than inventing failure counts.
         </p>
       </div>
