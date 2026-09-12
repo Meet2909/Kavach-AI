@@ -36,14 +36,14 @@ export default function TracePanel({
 
   const getStepColor = (step) => {
     switch (step) {
-      case 'INTAKE': return 'text-cyan-400 bg-cyan-500/10 border-cyan-500/30';
-      case 'PLAN': return 'text-purple-400 bg-purple-500/10 border-purple-500/30';
+      case 'INTAKE': return 'text-[#84592B] bg-[#84592B]/15 border-[#84592B]';
+      case 'PLAN': return 'text-[#743014] bg-[#743014]/15 border-[#743014]';
       case 'RETRIEVE': return 'text-amber-400 bg-amber-500/10 border-amber-500/30';
-      case 'ACT': return 'text-blue-400 bg-blue-500/10 border-blue-500/30';
-      case 'OBSERVE': return 'text-indigo-400 bg-indigo-500/10 border-indigo-500/30';
-      case 'VERIFY': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30';
-      case 'COMPLETED': return 'text-green-400 bg-green-500/10 border-green-500/30';
-      case 'FAILED': return 'text-red-400 bg-red-500/10 border-red-500/30';
+      case 'ACT': return 'text-[#84592B] bg-[#84592B]/15 border-[#84592B]';
+      case 'OBSERVE': return 'text-[#84592B] bg-[#84592B]/15 border-[#84592B]';
+      case 'VERIFY': return 'text-[#9D9167] bg-[#9D9167]/20 border-[#9D9167]';
+      case 'COMPLETED': return 'text-[#9D9167] bg-[#9D9167]/20 border-[#9D9167]';
+      case 'FAILED': return 'text-[#743014] bg-[#743014]/15 border-[#743014]';
       case 'SYSTEM': return 'text-pink-400 bg-pink-500/10 border-pink-500/30';
       case 'FALLBACK': return 'text-yellow-400 bg-yellow-500/10 border-yellow-500/30';
       default: return 'text-gray-300 bg-white/5 border-white/10';
@@ -53,10 +53,10 @@ export default function TracePanel({
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
       {/* State Machine Pipeline Progress Bar */}
-      <div className="p-4 rounded-2xl bg-black/40 border border-white/10 backdrop-blur-md shadow-xl">
+      <div className="p-4 rounded-2xl bg-slate-800 border border-slate-700 backdrop-blur-md shadow-xl">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">
-            <Activity size={16} className="text-purple-400 animate-pulse" />
+            <Activity size={16} className="text-[#743014] animate-pulse" />
             <span className="font-mono text-xs font-semibold uppercase tracking-wider text-gray-300">
               Agent State Machine (Max 8 Steps · Air-Gapped)
             </span>
@@ -64,15 +64,15 @@ export default function TracePanel({
           <div className="flex items-center space-x-3">
             {jobId && (
               <span className="font-mono text-xs px-2.5 py-0.5 rounded-full bg-white/10 text-gray-300 border border-white/15">
-                Job ID: <strong className="text-purple-300">{jobId}</strong>
+                Job ID: <strong className="text-[#743014]">{jobId}</strong>
               </span>
             )}
             <span className={`font-mono text-xs font-bold px-2.5 py-0.5 rounded-full border ${
               status === 'COMPLETED'
-                ? 'bg-green-500/20 text-green-300 border-green-500/40'
+                ? 'bg-[#9D9167]/20 text-[#9D9167] border-[#9D9167]'
                 : status === 'FAILED'
-                ? 'bg-red-500/20 text-red-300 border-red-500/40'
-                : 'bg-blue-500/20 text-blue-300 border-blue-500/40 animate-pulse'
+                ? 'bg-[#743014]/15 text-[#743014] border-[#743014]'
+                : 'bg-[#84592B]/15 text-[#84592B] border-[#84592B] animate-pulse'
             }`}>
               {status}
             </span>
@@ -100,14 +100,14 @@ export default function TracePanel({
                 key={step}
                 className={`py-2 px-1 text-center rounded-lg border text-[11px] font-mono font-bold transition-all duration-300 ${
                   isCurrent
-                    ? 'bg-purple-600/30 border-purple-400 text-purple-200 shadow-[0_0_15px_rgba(168,85,247,0.3)] animate-pulse'
+                    ? 'bg-[#743014]/15 border-[#743014] text-[#743014] shadow-[0_0_15px_rgba(136,19,55,0.3)] animate-pulse'
                     : hasPassed || isFinished
-                    ? 'bg-green-500/15 border-green-500/30 text-green-300'
-                    : 'bg-white/5 border-white/10 text-gray-500 opacity-60'
+                    ? 'bg-[#9D9167]/20 border-[#9D9167] text-[#9D9167]'
+                    : 'bg-slate-600 border-slate-500 text-white'
                 }`}
               >
-                <div className="text-[9px] opacity-60">0{idx + 1}</div>
-                <div className="truncate">{step}</div>
+                <div className="text-[9px] text-white opacity-80">0{idx + 1}</div>
+                <div className="truncate font-bold text-white">{step}</div>
               </div>
             );
           })}
@@ -120,17 +120,17 @@ export default function TracePanel({
         <div className="flex items-center justify-between px-5 py-3 border-b border-white/10 bg-white/[0.04]">
           <div className="flex items-center space-x-3">
             <div className="flex space-x-2">
-              <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
+              <div className="w-3 h-3 rounded-full bg-[#743014]/15"></div>
               <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
-              <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
+              <div className="w-3 h-3 rounded-full bg-[#9D9167]/20"></div>
             </div>
             <div className="flex items-center space-x-2 text-gray-400">
-              <Terminal size={14} className="text-purple-400" />
+              <Terminal size={14} className="text-[#743014]" />
               <span className="font-mono text-xs text-gray-300">kavach-agent@sovereign-node:~/jobs/{jobId || 'daemon'}</span>
             </div>
           </div>
           <div className="flex items-center space-x-2 text-[11px] font-mono text-gray-400">
-            <Cpu size={13} className="text-cyan-400" />
+            <Cpu size={13} className="text-[#84592B]" />
             <span>Hardware: Distributed 6GB RTX 4050 Cluster</span>
           </div>
         </div>
@@ -139,7 +139,7 @@ export default function TracePanel({
         <div className="p-6 font-mono text-xs space-y-2.5 min-h-[340px] max-h-[500px] overflow-y-auto leading-relaxed">
           {traceLog.length === 0 ? (
             <div className="text-gray-500 flex items-center space-x-2 py-8 justify-center">
-              <span className="text-purple-500 animate-pulse">$</span>
+              <span className="text-[#743014] animate-pulse">$</span>
               <span>Awaiting job execution payload from /upload and /task endpoints...</span>
             </div>
           ) : (
@@ -151,7 +151,7 @@ export default function TracePanel({
                   <span className={`px-2 py-0.5 rounded text-[10px] font-bold shrink-0 border select-none ${badgeStyle}`}>
                     {log.step}
                   </span>
-                  <span className="text-purple-400 shrink-0 select-none">➜</span>
+                  <span className="text-[#743014] shrink-0 select-none">➜</span>
                   <span className="text-gray-200 break-words flex-1">{log.detail}</span>
                 </div>
               );
@@ -160,25 +160,25 @@ export default function TracePanel({
 
           {/* Live Typing Pulse when processing */}
           {status === 'PROCESSING' && (
-            <div className="flex items-center space-x-3 text-purple-400 pt-2">
+            <div className="flex items-center space-x-3 text-[#743014] pt-2">
               <span className="text-gray-500 shrink-0">[{new Date().toLocaleTimeString('en-US', { hour12: false })}]</span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold border border-purple-500/40 bg-purple-500/20 text-purple-300">
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold border border-[#743014] bg-[#743014]/15 text-[#743014]">
                 ACTIVE
               </span>
-              <span className="text-purple-400">➜</span>
-              <span className="text-purple-300">Bounded agent reasoning state transition in progress...</span>
-              <span className="w-2 h-4 bg-purple-400 animate-pulse inline-block"></span>
+              <span className="text-[#743014]">➜</span>
+              <span className="text-[#743014]">Bounded agent reasoning state transition in progress...</span>
+              <span className="w-2 h-4 bg-[#743014]/15 animate-pulse inline-block"></span>
             </div>
           )}
 
           {/* Finalized Banner */}
           {status === 'COMPLETED' && (
-            <div className="mt-6 p-4 rounded-xl bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30 text-green-300 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="mt-6 p-4 rounded-xl bg-gradient-to-r from-[#9D9167]/10 to-[#9D9167]/10 border border-[#9D9167] text-[#9D9167] flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div className="flex items-center space-x-3">
-                <CheckCircle2 size={24} className="text-green-400 shrink-0" />
+                <CheckCircle2 size={24} className="text-[#9D9167] shrink-0" />
                 <div>
                   <div className="font-bold text-sm text-white">Execution Cycle Successfully Finalized</div>
-                  <div className="text-xs text-green-400/80">
+                  <div className="text-xs text-[#9D9167]/80">
                     Deterministic verification passed. Deliverable artifact generated with citations.
                   </div>
                 </div>
@@ -187,7 +187,7 @@ export default function TracePanel({
                 {onNavigateToArtifact && (
                   <button
                     onClick={onNavigateToArtifact}
-                    className="px-3.5 py-2 rounded-lg bg-green-500/20 hover:bg-green-500/30 border border-green-500/40 text-green-200 text-xs font-bold font-mono transition flex items-center space-x-1.5"
+                    className="px-3.5 py-2 rounded-lg bg-[#9D9167]/20 hover:bg-[#9D9167]/20 border border-[#9D9167] text-[#9D9167] text-xs font-bold font-mono transition flex items-center space-x-1.5"
                   >
                     <FileCheck2 size={14} />
                     <span>Inspect Artifact</span>
@@ -212,3 +212,4 @@ export default function TracePanel({
     </div>
   );
 }
+
