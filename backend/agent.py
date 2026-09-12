@@ -16,6 +16,7 @@ from artifact_generator import generate_artifact
 from artifact_validator import validate_artifact
 from audit import write_audit_log # Vinit's 3-check validator
 from knowledge_graph import evaluate_evidence, construct_metaprompt # Sovereign Graph & Metaprompt Engine
+from verification_client import call_verification_node  # Vaibhav's GPU-hosted LoRA verification node
 
 # ==============================================================================
 # BLOCK 1: STATE AND MEMORY MANAGEMENT
@@ -135,7 +136,11 @@ def execute_agent_loop(task_payload: dict, memory: AgentMemory) -> List[Dict[str
                 ev = memory.context.get('evidence_eval', {})
                 
                 # Apply dynamic model override from knowledge graph (e.g. use Vajra for fast QA)
-                if ev and ev.get("model_override"):
+                # IMPORTANT: Never override if ANY file is attached — file-specific routing is locked.
+                # Sending CSVs to Vajra causes reasoning failures, and Images cause 400 Bad Request.
+                has_file = bool(file_path and file_path.strip())
+                
+                if ev and ev.get("model_override") and not has_file:
                     override_key = ev["model_override"]
                     from router import load_registry
                     registry = load_registry()
@@ -145,41 +150,61 @@ def execute_agent_loop(task_payload: dict, memory: AgentMemory) -> List[Dict[str
                         memory.context['target_model'] = target_model
                         memory.context['target_ip'] = target_ip
                         memory.add_trace("ROUTING", f"Dynamic override: Query re-routed to {target_model} on {target_ip}.")
+                elif has_file and ev and ev.get("model_override"):
+                    memory.add_trace("ROUTING", f"File attachment detected — model_override '{ev['model_override']}' ignored. Keeping specialized file route: {target_model}.")
+
                 
                 # Enforce hardware constraints for Laptop 2 (Vaibhav Engine)
                 if "10.73.132.79" in str(target_ip) or "10.12" in str(target_ip):
                     memory.add_trace("SYSTEM", f"Executing hardware VRAM swap to {target_model}...")
                     try:
                         swap_model(target_model, host=target_ip)
+                        time.sleep(2)  # Let Ollama finish initialising after swap before inference
                     except Exception as e:
                         memory.add_trace("SYSTEM", f"VRAM swap notice: {str(e)}")
+
                 
                 memory.add_trace(current_state.value, f"Firing inference request to {target_model} on {target_ip}.")
                 
                 # Assemble the 4-Pillar Metaprompt — pass task_type so vision gets image-aware prompt
                 grounded_prompt = construct_metaprompt(user_prompt, ev, task_type=memory.context.get('task_type', 'general'))
                 
-                # Prepare JSON Payload
+                # Prepare JSON Payload with GPU-optimized Ollama options
+                task_type_ctx = memory.context.get('task_type', 'general')
+                is_vision_task = task_type_ctx in ('vision', 'p_and_id', 'image') or (
+                    memory.context.get('file_path', '') or ''
+                ).lower().endswith(('.png', '.jpg', '.jpeg', '.webp', '.bmp'))
+
                 request_payload = {
                     "model": target_model,
                     "prompt": grounded_prompt,
-                    "stream": False
+                    "stream": False,
+                    "options": {
+                        # Cap output length — prevents unbounded generation that exhausts VRAM
+                        "num_predict": 512,
+                        # Limit KV cache size — critical for 6GB GPU; 2048 fits vision+text comfortably
+                        "num_ctx": 2048,
+                        # Low temperature = faster, deterministic output (no sampling overhead)
+                        "temperature": 0.1,
+                    }
                 }
                 
-                # Base64 encode and attach visual asset if present
-                # Images are compressed first to avoid 400 Bad Request from Ollama (payload too large)
+                # Base64 encode and attach visual asset if present.
+                # Images are resized to 512px max — this is the critical GPU optimization:
+                # 1024px → ~1500 visual tokens; 512px → ~400 tokens. 4x less VRAM for KV cache.
+                # On a 6GB RTX 4050, this is the difference between timing out and responding in <60s.
                 file_path = memory.context.get('file_path')
                 if file_path and any(file_path.lower().endswith(ext) for ext in ['.png', '.jpg', '.jpeg', '.webp', '.bmp']):
                     import base64, io
                     try:
                         from PIL import Image
                         img = Image.open(file_path).convert("RGB")
-                        # Resize to max 1024px on longest side — keeps payload under ~300KB
-                        img.thumbnail((1024, 1024), Image.LANCZOS)
+                        # 512px max: reduces visual tokens ~4x vs 1024px — essential for 6GB VRAM
+                        img.thumbnail((512, 512), Image.LANCZOS)
                         buf = io.BytesIO()
-                        img.save(buf, format="JPEG", quality=85)
+                        img.save(buf, format="JPEG", quality=70)  # quality 70 keeps diagnostics readable
                         b64_img = base64.b64encode(buf.getvalue()).decode('utf-8')
-                        memory.add_trace(current_state.value, f"Image compressed & encoded ({len(b64_img)//1024} KB, max 1024px).")
+                        memory.add_trace(current_state.value, f"Image compressed & encoded ({len(b64_img)//1024} KB, max 512px, q70).")
                     except ImportError:
                         # Pillow not installed — send raw (may be large)
                         with open(file_path, "rb") as img_file:
@@ -221,14 +246,26 @@ def execute_agent_loop(task_payload: dict, memory: AgentMemory) -> List[Dict[str
                         data=payload,
                         headers={'Content-Type': 'application/json'}
                     )
-                    # Vision models processing large base64 images need more time (2-3 min on laptop GPU)
-                    task_type_ctx = memory.context.get('task_type', 'general')
-                    inference_timeout = 300 if task_type_ctx in ('vision', 'p_and_id', 'image') else 90
+                    # With 512px images and num_predict=512, vision inference on RTX 4050 6GB
+                    # completes in 30-90s. 150s gives comfortable headroom without hanging the UI.
+                    inference_timeout = 150 if is_vision_task else 90
                     with urllib.request.urlopen(req, timeout=inference_timeout) as response:
                         gen_data = json.loads(response.read().decode())
                         gen_text = gen_data.get('response', '').strip()
                         memory.context['raw_response'] = gen_text
                         memory.add_trace(current_state.value, f"Inference complete ({len(gen_text)} chars generated).")
+                        
+                    # ****CRITICAL FIX: Explicitly flush VRAM immediately after inference
+                    # This guarantees the 6GB GPU is completely empty before the OBSERVE phase
+                    # hits the FastAPI verification node on the same laptop.
+                    try:
+                        evict_payload = json.dumps({"model": target_model, "keep_alive": 0}).encode('utf-8')
+                        evict_req = urllib.request.Request(f"{host_url}/api/generate", data=evict_payload, headers={'Content-Type': 'application/json'})
+                        urllib.request.urlopen(evict_req, timeout=5)
+                        memory.add_trace("SYSTEM", f"VRAM successfully flushed (evicted {target_model}).")
+                    except Exception as e:
+                        memory.add_trace("WARN", f"Failed to evict VRAM: {e}")
+                        
                 except Exception as infer_err:
                     memory.add_trace("WARN", f"Live node unreachable ({infer_err}).")
                     # Only mark as failed if we have NO prior successful response.
@@ -245,6 +282,18 @@ def execute_agent_loop(task_payload: dict, memory: AgentMemory) -> List[Dict[str
             # 6. OBSERVE PHASE
             elif current_state == AgentState.OBSERVE:
                 memory.add_trace(current_state.value, "Response captured and parsed into memory.")
+
+                # ── Vaibhav's Verification Node (DEPRECATED) ─────────────────
+                # We have shifted verification entirely to Laptop 1 (Gateway) using 
+                # a local LLM-as-a-judge to prevent VRAM crashes on Vaibhav's machine.
+                # The raw response is passed directly to the VERIFY phase where the 
+                # new artifact_validator.py takes over.
+                raw = memory.context.get('raw_response') or ''
+                if raw and not memory.context.get('inference_failed'):
+                    memory.add_trace(current_state.value, "Bypassing remote Verification Node — deferring to local LLM-as-a-judge (Gateway).")
+                    memory.context['verification_decision'] = "DEFERRED_TO_LOCAL_JUDGE"
+                # ─────────────────────────────────────────────────────────────
+
                 current_state = AgentState.VERIFY
                 
             # 7. VERIFY PHASE

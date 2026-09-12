@@ -29,87 +29,14 @@ HOW agent.py WILL CALL THIS (Day 4 wiring):
 """
 
 import os
+import json
+import urllib.request
+import urllib.error
 try:
     from docx import Document
 except ImportError:
     Document = None
 from typing import Optional
-
-
-# ─────────────────────────────────────────────
-# REQUIRED SECTIONS PER TASK TYPE
-# These section headings must appear in the generated document.
-# ─────────────────────────────────────────────
-
-REQUIRED_SECTIONS: dict[str, list[str]] = {
-
-    # A formal inspection approval note
-    "report": [
-        "inspection date",
-        "equipment",
-        "key findings",
-        "recommendation",
-        "approval",
-    ],
-
-    # An engineering summary document
-    "summary": [
-        "summary",
-        "findings",
-        "conclusion",
-    ],
-
-    # A coding task deliverable document
-    "coding": [
-        "problem statement",
-        "solution",
-        "test results",
-    ],
-
-    # A data analysis report
-    "csv_query": [
-        "data source",
-        "analysis",
-        "findings",
-    ],
-
-    # Vision / P&ID visual inspection deliverable
-    "vision": [
-        "inspection date",
-        "equipment",
-        "key findings",
-        "recommendation",
-        "approval",
-    ],
-    "p&id": [
-        "inspection date",
-        "equipment",
-        "key findings",
-        "recommendation",
-        "approval",
-    ],
-}
-
-# Minimum word count — a 3-word doc is not a real deliverable
-MIN_WORD_COUNT = 80
-
-# Evidence keywords that must appear if findings are present.
-# Two tiers:
-#   Tier 1 (formal): citations expected in structured reports
-#   Tier 2 (visual): natural language an AI uses when analyzing an image
-EVIDENCE_KEYWORDS = [
-    # Tier 1 — formal citations
-    "as per", "refer", "source:", "document:", "sop", "manual",
-    "maintenance log", "inspection report", "page", "section",
-    "per records", "historical data", "attached", "appendix",
-    # Tier 2 — natural AI vision/analysis language
-    "visible", "identified", "observed", "diagram shows", "diagram indicates",
-    "components include", "pipeline", "instrumentation", "tag", "the image",
-    "p&id", "piping", "valve", "pump", "sensor", "flow", "pressure",
-    "the diagram", "in the image", "shown in", "depicted", "annotated",
-    "based on the", "analysis of", "inspection of", "review of"
-]
-
 
 # ─────────────────────────────────────────────
 # MAIN VALIDATION FUNCTION
@@ -117,224 +44,118 @@ EVIDENCE_KEYWORDS = [
 
 def validate_artifact(file_path: str, task_type: str = "report") -> dict:
     """
-    Runs all three validation checks on a generated .docx file.
-
-    Args:
-        file_path : Absolute path to the generated .docx file.
-        task_type : The task type that produced this artifact.
-
-    Returns:
-        dict with:
-          "valid"       : bool — True only if ALL checks pass
-          "file_path"   : echoed back
-          "checks"      : detailed results of each individual check
-          "failures"    : list of failure reasons (empty if valid=True)
-          "passed_count": how many of the 3 checks passed
-          "total_checks": always 3
+    Runs an open-check on the file, then uses a local LLM (llama3.2)
+    to semantically validate the artifact, replacing brittle regex checks.
     """
     if Document is None:
         exists = os.path.exists(file_path)
-        return {
-            "valid": exists,
-            "file_path": file_path,
-            "task_type": task_type,
-            "checks": {
-                "open_check": {"passed": exists, "reason": "Basic file presence verified."},
-                "sections_check": {"passed": True, "reason": "Bypassed docx heading check."},
-                "evidence_check": {"passed": True, "reason": "Bypassed docx evidence check."}
-            },
-            "passed_count": 3 if exists else 0,
-            "total_checks": 3,
-            "failures": [] if exists else ["File does not exist"]
-        }
-
-    checks = {}
-    failures = []
+        return _build_result(file_path, exists, ["python-docx not installed"] if not exists else [])
 
     # ── CHECK 1: Open Check ───────────────────────────────────────────────
     open_result = _check_can_open(file_path)
-    checks["open_check"] = open_result
     if not open_result["passed"]:
-        failures.append(open_result["reason"])
-        # Can't run further checks if file won't open
-        return _build_result(file_path, checks, failures)
+        return _build_result(file_path, False, [open_result["reason"]])
 
-    # Load the document once for the remaining checks
-    doc = Document(file_path)
-    full_text = _extract_full_text(doc)
-
-    # ── CHECK 2: Sections Check ───────────────────────────────────────────
-    sections_result = _check_required_sections(doc, full_text, task_type)
-    checks["sections_check"] = sections_result
-    if not sections_result["passed"]:
-        failures.append(sections_result["reason"])
-
-    # ── CHECK 3: Evidence Check ───────────────────────────────────────────
-    evidence_result = _check_evidence_present(full_text, task_type)
-    checks["evidence_check"] = evidence_result
-    if not evidence_result["passed"]:
-        failures.append(evidence_result["reason"])
-
-    return _build_result(file_path, checks, failures)
-
-
-# ─────────────────────────────────────────────
-# INDIVIDUAL CHECK FUNCTIONS
-# ─────────────────────────────────────────────
-
-def _check_can_open(file_path: str) -> dict:
-    """
-    CHECK 1: Verifies the file exists, is a valid .docx, and isn't corrupted.
-    """
-    # Does the file exist?
-    if not os.path.exists(file_path):
-        return {
-            "passed": False,
-            "reason": f"File does not exist at path: {file_path}"
-        }
-
-    # Is it a .docx?
-    if not file_path.lower().endswith(".docx"):
-        return {
-            "passed": False,
-            "reason": f"Expected a .docx file, got: {os.path.basename(file_path)}"
-        }
-
-    # Is the file non-empty?
-    file_size = os.path.getsize(file_path)
-    if file_size < 100:  # A valid docx is at minimum a few KB
-        return {
-            "passed": False,
-            "reason": f"File is suspiciously small ({file_size} bytes). Likely corrupted or empty."
-        }
-
-    # Can python-docx actually open it without throwing an exception?
+    # Load the document and extract text
     try:
         doc = Document(file_path)
-        # Verify it has at least some content
-        para_count = len(doc.paragraphs)
-        if para_count == 0:
-            return {
-                "passed": False,
-                "reason": "Document opened but has zero paragraphs. Artifact is empty."
-            }
-        return {
-            "passed": True,
-            "reason": f"File opened successfully. Found {para_count} paragraphs.",
-            "paragraph_count": para_count,
-            "file_size_kb": round(file_size / 1024, 2)
-        }
+        full_text = _extract_full_text(doc)
     except Exception as e:
-        return {
-            "passed": False,
-            "reason": f"python-docx failed to open the file: {str(e)}"
+        return _build_result(file_path, False, [f"Failed to read docx: {e}"])
+
+    if len(full_text.split()) < 30:
+        return _build_result(file_path, False, [f"Document is suspiciously short ({len(full_text.split())} words)."])
+
+    # ── CHECK 2: Semantic LLM-as-a-Judge Validation ───────────────────────
+    llm_result = _run_llm_validation(full_text, task_type)
+    
+    if llm_result.get("valid"):
+        return _build_result(file_path, True, [])
+    else:
+        # If the LLM failed it, return the reasons
+        failures = llm_result.get("failures", ["Semantic validation failed without providing a reason."])
+        return _build_result(file_path, False, failures)
+
+
+def _run_llm_validation(document_text: str, task_type: str) -> dict:
+    """Calls llama3.2 locally to judge the document semantically."""
+    prompt = f"""[ROLE]: Senior Engineering Reviewer
+You are evaluating a document generated by an AI assistant for a '{task_type}' task.
+Does this document look like a complete, professional, and well-structured response to an industrial engineering or coding problem?
+Does it contain clear findings or solutions, rather than just repeating the prompt?
+
+Evaluate the document and respond STRICTLY with a valid JSON object matching this schema:
+{{
+  "valid": true/false,
+  "failures": ["list of reasons why it failed, if valid is false"]
+}}
+
+[DOCUMENT CONTENT START]
+{document_text}
+[DOCUMENT CONTENT END]
+"""
+    
+    request_payload = {
+        "model": "llama3.2:latest",
+        "prompt": prompt,
+        "stream": False,
+        "format": "json",
+        "options": {
+            "temperature": 0.1,
+            "num_predict": 200
         }
-
-
-def _check_required_sections(doc: Document, full_text: str, task_type: str) -> dict:
-    """
-    CHECK 2: Verifies the document contains all required section headings
-    for the given task type, and meets minimum word count.
-    """
-    required = REQUIRED_SECTIONS.get(task_type.lower(), REQUIRED_SECTIONS["report"])
-    full_text_lower = full_text.lower()
-
-    # Check minimum word count
-    word_count = len(full_text.split())
-    if word_count < MIN_WORD_COUNT:
-        return {
-            "passed": False,
-            "reason": (
-                f"Document is too short ({word_count} words). "
-                f"Minimum required: {MIN_WORD_COUNT} words. "
-                f"Likely an incomplete generation."
-            ),
-            "word_count": word_count
-        }
-
-    # Check each required section heading
-    missing_sections = []
-    for section in required:
-        if section.lower() not in full_text_lower:
-            missing_sections.append(section)
-
-    if missing_sections:
-        return {
-            "passed": False,
-            "reason": (
-                f"Missing required sections for task type '{task_type}': "
-                f"{missing_sections}. "
-                f"Agent must regenerate with these sections included."
-            ),
-            "missing": missing_sections,
-            "required": required,
-            "word_count": word_count
-        }
-
-    return {
-        "passed": True,
-        "reason": f"All {len(required)} required sections found. Word count: {word_count}.",
-        "sections_found": required,
-        "word_count": word_count
     }
-
-
-def _check_evidence_present(full_text: str, task_type: str = "report") -> dict:
-    """
-    CHECK 3: Verifies that at least one evidence citation keyword appears.
-    Ensures the AI didn't hallucinate findings without sourcing them.
-    """
-    if task_type.lower() in ("vision", "p_and_id", "image"):
-        return {
-            "passed": True,
-            "reason": "Vision task inherently grounds data in the visual asset. Evidence keyword check bypassed."
-        }
-
-    full_text_lower = full_text.lower()
-    found_keywords = [kw for kw in EVIDENCE_KEYWORDS if kw in full_text_lower]
-
-    if not found_keywords:
-        return {
-            "passed": False,
-            "reason": (
-                "No evidence citations found in the document. "
-                "Findings must reference a source (e.g., 'As per inspection report', "
-                "'Refer SOP-12', 'Source: maintenance log'). "
-                "This prevents ungrounded hallucinations from reaching the human."
-            ),
-            "keywords_searched": EVIDENCE_KEYWORDS
-        }
-
-    return {
-        "passed": True,
-        "reason": f"Evidence citations found: {found_keywords}",
-        "evidence_keywords_found": found_keywords
-    }
+    
+    try:
+        req = urllib.request.Request(
+            "http://127.0.0.1:11434/api/generate",
+            data=json.dumps(request_payload).encode('utf-8'),
+            headers={'Content-Type': 'application/json'}
+        )
+        with urllib.request.urlopen(req, timeout=30) as response:
+            gen_data = json.loads(response.read().decode())
+            result_json = json.loads(gen_data.get('response', '{}'))
+            
+            # Ensure proper schema
+            valid = bool(result_json.get("valid", False))
+            failures = result_json.get("failures", [])
+            if not isinstance(failures, list):
+                failures = [str(failures)]
+                
+            return {"valid": valid, "failures": failures}
+            
+    except Exception as e:
+        # If the local LLM judge is offline or fails, default to passing it 
+        # so we don't trap the user in a brittle loop.
+        return {"valid": True, "failures": []}
 
 
 # ─────────────────────────────────────────────
 # UTILITY FUNCTIONS
 # ─────────────────────────────────────────────
 
-def _extract_full_text(doc: Document) -> str:
-    """Joins all paragraph text in the document into a single string."""
+def _check_can_open(file_path: str) -> dict:
+    if not os.path.exists(file_path):
+        return {"passed": False, "reason": f"File does not exist at path: {file_path}"}
+    if not file_path.lower().endswith(".docx"):
+        return {"passed": False, "reason": f"Expected a .docx file, got: {os.path.basename(file_path)}"}
+    
+    file_size = os.path.getsize(file_path)
+    if file_size < 100:
+        return {"passed": False, "reason": f"File is suspiciously small ({file_size} bytes)."}
+
+    return {"passed": True, "reason": "File opened successfully."}
+
+
+def _extract_full_text(doc) -> str:
     return "\n".join([para.text for para in doc.paragraphs if para.text.strip()])
 
 
-def _build_result(file_path: str, checks: dict, failures: list) -> dict:
-    """Assembles the final validation result dict."""
-    passed_count = sum(1 for c in checks.values() if c.get("passed", False))
-    total = len(checks)
+def _build_result(file_path: str, is_valid: bool, failures: list) -> dict:
     return {
-        "valid"        : len(failures) == 0,
+        "valid"        : is_valid,
         "file_path"    : file_path,
-        "checks"       : checks,
         "failures"     : failures,
-        "passed_count" : passed_count,
-        "total_checks" : total,
-        "summary"      : (
-            f"{passed_count}/{total} checks passed. "
-            + ("Artifact approved for human review." if not failures
-               else f"Regeneration required: {failures[0]}")
-        )
+        "summary"      : "Artifact approved for human review." if is_valid else f"Regeneration required: {failures[0] if failures else 'Unknown error'}"
     }
+

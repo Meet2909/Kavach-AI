@@ -36,7 +36,12 @@ def unload_model(model_name: str, host: str = OLLAMA_URL):
     return False
 
 def load_model(model_name: str, host: str = OLLAMA_URL):
-    """Pre-loads a model into VRAM."""
+    """Pre-loads a model into VRAM.
+    
+    Vision and coder 7B models need 60-90s to load on a 6GB GPU.
+    The timeout here MUST be longer than that or Ollama will be
+    mid-load when inference fires, causing 500 Internal Server Error.
+    """
     print(f"Loading model: {model_name} into VRAM on {host}...")
     data = json.dumps({
         "model": model_name,
@@ -46,7 +51,7 @@ def load_model(model_name: str, host: str = OLLAMA_URL):
     req = urllib.request.Request(f"{host}/api/generate", data=data, method='POST')
     req.add_header('Content-Type', 'application/json')
     try:
-        with urllib.request.urlopen(req, timeout=10) as response:
+        with urllib.request.urlopen(req, timeout=120) as response:  # 120s — 7B vision load needs ~60-90s on RTX 4050 6GB
             if response.status == 200:
                 print(f"✅ Successfully loaded {model_name}.")
                 return True

@@ -40,5 +40,15 @@
       "fast_qa",
       "specialized_refinery_knowledge"
     ]
+  },
+  "verification": {
+    "model_id": "lora_verification_model",
+    "backend": "fastapi",
+    "host": "http://10.73.132.79:8001",
+    "capabilities": [
+      "output_verification",
+      "safety_check",
+      "petroleum_domain_validation"
+    ]
   }
 }

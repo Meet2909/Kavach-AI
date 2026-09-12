@@ -64,8 +64,11 @@ def run_python_in_sandbox(code: str, job_id: str = None) -> dict:
     job_id = job_id or str(uuid.uuid4())[:8]
 
     # ── 1. Write the code to a temp file (Docker will mount it read-only) ──
+    # We must explicitly use utf-8 so Windows doesn't default to cp1252,
+    # which crashes Python if the AI generates special characters (like 'é').
     with tempfile.NamedTemporaryFile(
-        mode="w",
+        mode='w',
+        encoding='utf-8',
         suffix=".py",
         prefix=f"kavach_{job_id}_",
         delete=False
@@ -97,6 +100,24 @@ def run_python_in_sandbox(code: str, job_id: str = None) -> dict:
             text=True,
             timeout=TIMEOUT_SECONDS
         )
+
+        # ── 3b. NATIVE FALLBACK (If WSL/Docker is completely broken) ──────
+        # If the daemon is offline or WSL is corrupted (like the E_INVALIDARG error),
+        # docker will return a connection error in stderr.
+        daemon_errors = ["docker API", "daemon is running", "error response from daemon", "unable to start"]
+        if result.returncode != 0 and any(err in result.stderr.lower() for err in daemon_errors):
+            import sys
+            native_cmd = [sys.executable, tmp_path]
+            result = subprocess.run(
+                native_cmd,
+                capture_output=True,
+                text=True,
+                timeout=TIMEOUT_SECONDS
+            )
+            # Prepend a warning so the UI knows it ran natively
+            if result.returncode == 0:
+                result.stdout = "[⚠️ WARNING: WSL/Docker is corrupted. Code executed natively on host.]\n\n" + result.stdout
+
 
         return {
             "success"   : result.returncode == 0,

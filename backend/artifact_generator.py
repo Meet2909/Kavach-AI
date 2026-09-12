@@ -72,6 +72,7 @@ def generate_artifact(
     # Pull the real LLM response from the agent context
     raw_ai_output = (context or {}).get('raw_response') or ""
     inference_failed = (context or {}).get('inference_failed', False)
+    verification_decision = (context or {}).get('verification_decision', 'NOT_RUN')
 
     if inference_failed or not raw_ai_output:
         # Inference node was unreachable — clearly mark the document as unverified
@@ -96,6 +97,19 @@ def generate_artifact(
                 bp.add_run(line)
         else:
             doc.add_paragraph(raw_ai_output)
+
+        # Verification Node decision stamp
+        vd_map = {
+            'APPROVED':    '✅ VERIFICATION NODE: APPROVED — Output is factually sound and domain-compliant.',
+            'MODIFIED':    '🔧 VERIFICATION NODE: MODIFIED — Output was corrected and polished with credible petroleum-domain data.',
+            'REJECTED':    '❌ VERIFICATION NODE: REJECTED — Output flagged; human review mandatory before field execution.',
+            'UNREACHABLE': '⚠️  VERIFICATION NODE: OFFLINE — Output is unverified; treat as preliminary draft.',
+            'NOT_RUN':     '⚠️  VERIFICATION NODE: NOT RUN — Output is unverified; treat as preliminary draft.',
+            'SKIPPED':     '⚠️  VERIFICATION NODE: SKIPPED — Empty input, no verification performed.',
+        }
+        stamp_text = vd_map.get(verification_decision, f'Verification Status: {verification_decision}')
+        stamp_para = doc.add_paragraph()
+        stamp_para.add_run(stamp_text).bold = True
 
         # Always append the mandatory evidence citation so validator passes Check 3
         citation_para = doc.add_paragraph(style='List Bullet')
