@@ -52,32 +52,32 @@ export default function EvidenceRagView() {
   return (
     <div className="space-y-8 animate-fade-in-up">
       {/* Header */}
-      <div className="border-b border-gray-200 pb-6">
+      <div className="pb-6">
         <div className="flex items-center space-x-3">
-          <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono border border-amber-500/30">
+          <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#282B4A]/10 text-[#282B4A] font-mono border border-[#282B4A]/20 border-2">
             Grounding & Verification Layer
           </span>
-          <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#743014]/15 text-[#743014] font-mono border border-[#743014]">
+          <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#282B4A]/10 text-[#282B4A] font-mono border border-[#282B4A]/20 border-2">
             Pandas Local Query Engine
           </span>
         </div>
-        <h1 className="text-3xl font-bold tracking-tight mt-2 font-mono text-[#442D1C]">
+        <h1 className="text-3xl font-bold tracking-tight mt-2 font-mono text-[#282B4A]">
           Evidence & Historical RAG
         </h1>
-        <p className="text-base text-gray-600 font-mono mt-1 leading-relaxed">
+        <p className="text-base text-[#282B4A] font-mono mt-1 leading-relaxed">
           Grounds LLM responses in real plant records (maintenance_history.csv) without SQL servers or external telemetry.
         </p>
       </div>
 
       {/* CSV Introspection & Filter Bar */}
-      <div className="p-6 rounded-2xl bg-white border border-gray-200 backdrop-blur-md shadow-xl space-y-4">
+      <div className="p-6 rounded-2xl bg-[#EEEBDA] border border-[#282B4A]/20 border-2 backdrop-blur-md shadow-xl space-y-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex items-center space-x-2 text-base font-mono font-semibold text-[#442D1C]">
-            <Database size={18} className="text-amber-400" />
+          <div className="flex items-center space-x-2 text-base font-mono font-semibold text-[#282B4A]">
+            <Database size={18} className="text-[#282B4A]" />
             <span>Target: maintenance_history.csv</span>
             {schema && (
-              <span className="text-sm text-gray-600">
-                ({schema.total_rows} total records · {schema.columns.length} columns)
+              <span className="text-sm text-[#282B4A]">
+                ({schema.total_rows} total records Â· {schema.columns.length} columns)
               </span>
             )}
           </div>
@@ -88,7 +88,7 @@ export default function EvidenceRagView() {
                 setFilterVal('PUMP-A');
                 handleQuery();
               }}
-              className="text-sm font-mono px-2.5 py-1 rounded bg-white hover:bg-gray-100 text-gray-600 border border-gray-200 transition"
+              className="text-sm font-mono px-2.5 py-1 rounded bg-[#EEEBDA] hover:bg-gray-100 text-[#282B4A] border border-[#282B4A]/20 border-2 transition"
             >
               Preset: PUMP-A
             </button>
@@ -98,7 +98,7 @@ export default function EvidenceRagView() {
                 setFilterVal('FAILED');
                 handleQuery();
               }}
-              className="text-sm font-mono px-2.5 py-1 rounded bg-white hover:bg-gray-100 text-gray-600 border border-gray-200 transition"
+              className="text-sm font-mono px-2.5 py-1 rounded bg-[#EEEBDA] hover:bg-gray-100 text-[#282B4A] border border-[#282B4A]/20 border-2 transition"
             >
               Preset: FAILED
             </button>
@@ -108,11 +108,11 @@ export default function EvidenceRagView() {
         {/* Filter Controls */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
-            <label className="block text-sm font-mono text-gray-600 mb-1">Filter Column</label>
+            <label className="block text-sm font-mono text-[#282B4A] mb-1">Filter Column</label>
             <select
               value={filterKey}
               onChange={(e) => setFilterKey(e.target.value)}
-              className="w-full p-2.5 rounded-xl bg-white border border-gray-200 font-mono text-sm text-[#442D1C] focus:outline-none focus:border-amber-400"
+              className="w-full p-2.5 rounded-xl bg-[#EEEBDA] border border-[#282B4A]/20 border-2 font-mono text-sm text-[#282B4A] focus:outline-none focus:border-[#282B4A]/20 border-2"
             >
               {schema ? (
                 schema.columns.map((col) => (
@@ -125,13 +125,13 @@ export default function EvidenceRagView() {
           </div>
 
           <div>
-            <label className="block text-sm font-mono text-gray-600 mb-1">Filter Value</label>
+            <label className="block text-sm font-mono text-[#282B4A] mb-1">Filter Value</label>
             <input
               type="text"
               value={filterVal}
               onChange={(e) => setFilterVal(e.target.value)}
               placeholder="e.g. PUMP-A, FAILED, VALVE-101"
-              className="w-full p-2.5 rounded-xl bg-white border border-gray-200 font-mono text-sm text-[#442D1C] focus:outline-none focus:border-amber-400"
+              className="w-full p-2.5 rounded-xl bg-[#EEEBDA] border border-[#282B4A]/20 border-2 font-mono text-sm text-[#282B4A] focus:outline-none focus:border-[#282B4A]/20 border-2"
             />
           </div>
 
@@ -139,7 +139,7 @@ export default function EvidenceRagView() {
             <button
               onClick={handleQuery}
               disabled={loading}
-              className="w-full py-2.5 px-4 rounded-xl font-mono text-sm font-bold bg-amber-600 hover:bg-amber-500 text-white flex items-center justify-center space-x-2 transition cursor-pointer disabled:opacity-50"
+              className="w-full py-2.5 px-4 rounded-xl font-mono text-sm font-bold bg-[#282B4A] hover:bg-[#282B4A]/90 text-[#EEEBDA] flex items-center justify-center space-x-2 transition cursor-pointer disabled:opacity-50"
             >
               <Search size={14} className={loading ? 'animate-spin' : ''} />
               <span>{loading ? 'Querying Pandas...' : 'Query Plant Records'}</span>
@@ -148,7 +148,7 @@ export default function EvidenceRagView() {
         </div>
 
         {error && (
-          <div className="p-3 rounded-xl bg-[#743014]/15 border border-[#743014] text-[#743014] text-sm font-mono flex items-center space-x-2">
+          <div className="p-3 rounded-xl bg-[#282B4A]/10 border border-[#282B4A]/20 border-2 text-[#282B4A] text-sm font-mono flex items-center space-x-2">
             <AlertCircle size={14} />
             <span>{error}</span>
           </div>
@@ -159,28 +159,28 @@ export default function EvidenceRagView() {
       {results && (
         <div className="space-y-4">
           {/* Summary Box */}
-          <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-sm font-mono flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-[#282B4A]/10/10 border border-[#282B4A]/20 border-2/30 text-[#282B4A] text-sm font-mono flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <CheckCircle2 size={16} className="text-amber-400 shrink-0" />
+              <CheckCircle2 size={16} className="text-[#282B4A] shrink-0" />
               <span>{results.summary || `Matched ${results.count} records in local Pandas engine.`}</span>
             </div>
-            <span className="px-2 py-0.5 rounded bg-white border border-amber-500/40 text-amber-500 font-bold">
+            <span className="px-2 py-0.5 rounded bg-[#EEEBDA] border border-[#282B4A]/20 border-2/40 text-[#282B4A] font-bold">
               {results.count} Rows
             </span>
           </div>
 
           {/* Table of Matched Records */}
-          <div className="rounded-2xl border border-gray-200 bg-white backdrop-blur-md overflow-hidden shadow-xl">
+          <div className="rounded-2xl border border-[#282B4A]/20 border-2 bg-[#EEEBDA] backdrop-blur-md overflow-hidden shadow-xl">
             <div className="overflow-x-auto max-h-[400px]">
               <table className="w-full text-left font-mono text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200 text-gray-600 sticky top-0">
+                <thead className="bg-gray-50 border-b border-[#282B4A]/20 border-2 text-[#282B4A] sticky top-0">
                   <tr>
                     {results.rows.length > 0 && Object.keys(results.rows[0]).map((col) => (
                       <th key={col} className="p-3 font-semibold uppercase tracking-wider">{col}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 text-gray-600">
+                <tbody className="divide-y divide-gray-200 text-[#282B4A]">
                   {results.rows.map((row, idx) => (
                     <tr key={idx} className="hover:bg-gray-50 transition">
                       {Object.values(row).map((val, cIdx) => (
@@ -198,16 +198,19 @@ export default function EvidenceRagView() {
       )}
 
       {/* Hallucination Prevention Proof Card */}
-      <div className="p-6 rounded-2xl bg-white border border-gray-200 backdrop-blur-md space-y-3">
-        <div className="flex items-center space-x-2 text-base font-mono font-bold text-[#442D1C]">
-          <ShieldCheck size={18} className="text-[#9D9167]" />
+      <div className="p-6 rounded-2xl bg-[#EEEBDA] border border-[#282B4A]/20 border-2 backdrop-blur-md space-y-3">
+        <div className="flex items-center space-x-2 text-base font-mono font-bold text-[#282B4A]">
+          <ShieldCheck size={18} className="text-[#282B4A]" />
           <span>Research Differentiator: Anti-Hallucination Grounding</span>
         </div>
-        <p className="text-sm text-gray-600 font-mono leading-relaxed">
-          The agent loop executes <code className="text-amber-300">get_csv_schema()</code> during the <strong>PLAN</strong> phase so the model knows verified column headers before generating Pandas filter predicates. If the query yields zero records, the model abstains rather than inventing failure counts.
+        <p className="text-sm text-[#282B4A] font-mono leading-relaxed">
+          The agent loop executes <code className="text-[#282B4A] font-bold">get_csv_schema()</code> during the <strong>PLAN</strong> phase so the model knows verified column headers before generating Pandas filter predicates. If the query yields zero records, the model abstains rather than inventing failure counts.
         </p>
       </div>
     </div>
   );
 }
+
+
+
 

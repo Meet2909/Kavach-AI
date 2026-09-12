@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 
 const DEFAULT_ITEMS = [
   'Dashboard',            // Overview & stats
@@ -63,7 +63,7 @@ const LineSidebar = ({
               onClick={() => handleClick(index, label)}
               aria-current={isActive ? 'true' : undefined}
               className={`group relative flex items-center cursor-pointer select-none py-1.5 transition-all duration-200 ${
-                isActive ? 'text-[#442D1C]' : 'text-gray-600 hover:text-[#442D1C]'
+                isActive ? 'text-[#EEEBDA]' : 'text-[#EEEBDA]/70 hover:text-[#EEEBDA]'
               }`}
             >
               {/* Static Indicator Marker Line */}
@@ -72,8 +72,8 @@ const LineSidebar = ({
                   aria-hidden="true"
                   className={`absolute -left-8 top-1/2 -translate-y-1/2 h-px transition-all duration-200 ${
                     isActive
-                      ? 'w-6 bg-[#743014]/15 opacity-100 shadow-[0_0_8px_rgba(136,19,55,0.4)]'
-                      : 'w-3 bg-gray-300 opacity-50 group-hover:w-4 group-hover:opacity-80 group-hover:bg-[#743014]/15'
+                      ? 'w-6 bg-[#EEEBDA] opacity-100 shadow-[0_0_8px_rgba(238,235,218,0.4)]'
+                      : 'w-3 bg-[#EEEBDA] opacity-30 group-hover:w-4 group-hover:opacity-80'
                   }`}
                 />
               )}
@@ -88,8 +88,8 @@ const LineSidebar = ({
                   <span 
                     className={`mr-3 font-mono text-[0.82em] transition-colors duration-150 ${
                       isActive 
-                        ? 'text-[#743014] font-bold opacity-100' 
-                        : 'text-gray-500 opacity-60 group-hover:text-[#743014]/70 group-hover:opacity-90'
+                        ? 'text-[#EEEBDA] font-bold opacity-100' 
+                        : 'text-[#EEEBDA]/50 opacity-60 group-hover:text-[#EEEBDA]/70 group-hover:opacity-90'
                     }`}
                   >
                     {String(index + 1).padStart(2, '0')}
@@ -100,8 +100,8 @@ const LineSidebar = ({
                 <span 
                   className={`font-mono transition-colors duration-150 ${
                     isActive
-                      ? 'text-[#442D1C] font-bold tracking-wide'
-                      : 'text-gray-600 font-normal group-hover:text-[#442D1C]'
+                      ? 'text-[#EEEBDA] font-bold tracking-wide'
+                      : 'text-[#EEEBDA]/70 font-normal group-hover:text-[#EEEBDA]'
                   }`}
                 >
                   {label}
@@ -109,7 +109,7 @@ const LineSidebar = ({
 
                 {/* Subtle active pill dot on far right */}
                 {isActive && (
-                  <span className="ml-2.5 w-1.5 h-1.5 rounded-full bg-[#743014]/15 shadow-[0_0_8px_rgba(136,19,55,0.6)] inline-block self-center"></span>
+                  <span className="ml-2.5 w-1.5 h-1.5 rounded-full bg-[#EEEBDA] shadow-[0_0_8px_rgba(238,235,218,0.6)] inline-block self-center"></span>
                 )}
               </span>
             </li>
@@ -121,4 +121,6 @@ const LineSidebar = ({
 };
 
 export default LineSidebar;
+
+
 
