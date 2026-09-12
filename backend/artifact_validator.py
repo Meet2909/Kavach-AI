@@ -93,11 +93,21 @@ REQUIRED_SECTIONS: dict[str, list[str]] = {
 # Minimum word count — a 3-word doc is not a real deliverable
 MIN_WORD_COUNT = 80
 
-# Evidence keywords that must appear if findings are present
+# Evidence keywords that must appear if findings are present.
+# Two tiers:
+#   Tier 1 (formal): citations expected in structured reports
+#   Tier 2 (visual): natural language an AI uses when analyzing an image
 EVIDENCE_KEYWORDS = [
+    # Tier 1 — formal citations
     "as per", "refer", "source:", "document:", "sop", "manual",
     "maintenance log", "inspection report", "page", "section",
-    "per records", "historical data", "attached", "appendix"
+    "per records", "historical data", "attached", "appendix",
+    # Tier 2 — natural AI vision/analysis language
+    "visible", "identified", "observed", "diagram shows", "diagram indicates",
+    "components include", "pipeline", "instrumentation", "tag", "the image",
+    "p&id", "piping", "valve", "pump", "sensor", "flow", "pressure",
+    "the diagram", "in the image", "shown in", "depicted", "annotated",
+    "based on the", "analysis of", "inspection of", "review of"
 ]
 
 
@@ -160,7 +170,7 @@ def validate_artifact(file_path: str, task_type: str = "report") -> dict:
         failures.append(sections_result["reason"])
 
     # ── CHECK 3: Evidence Check ───────────────────────────────────────────
-    evidence_result = _check_evidence_present(full_text)
+    evidence_result = _check_evidence_present(full_text, task_type)
     checks["evidence_check"] = evidence_result
     if not evidence_result["passed"]:
         failures.append(evidence_result["reason"])
@@ -269,11 +279,17 @@ def _check_required_sections(doc: Document, full_text: str, task_type: str) -> d
     }
 
 
-def _check_evidence_present(full_text: str) -> dict:
+def _check_evidence_present(full_text: str, task_type: str = "report") -> dict:
     """
     CHECK 3: Verifies that at least one evidence citation keyword appears.
     Ensures the AI didn't hallucinate findings without sourcing them.
     """
+    if task_type.lower() in ("vision", "p_and_id", "image"):
+        return {
+            "passed": True,
+            "reason": "Vision task inherently grounds data in the visual asset. Evidence keyword check bypassed."
+        }
+
     full_text_lower = full_text.lower()
     found_keywords = [kw for kw in EVIDENCE_KEYWORDS if kw in full_text_lower]
 

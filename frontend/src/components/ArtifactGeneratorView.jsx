@@ -63,7 +63,7 @@ export default function ArtifactGeneratorView({ initialJobId }) {
         <h1 className="text-3xl font-bold tracking-tight mt-2 font-mono text-white">
           Artifact Generator & Validation Gate
         </h1>
-        <p className="text-sm text-gray-400 font-mono mt-1">
+        <p className="text-base text-gray-400 font-mono mt-1 leading-relaxed">
           Every generated .docx is subjected to Open Check, Required Sections Check, and Evidence Citation Check before delivery.
         </p>
       </div>
@@ -72,20 +72,20 @@ export default function ArtifactGeneratorView({ initialJobId }) {
       <div className="p-6 rounded-2xl bg-black/40 border border-white/10 backdrop-blur-md shadow-xl space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-xs font-mono text-gray-400 mb-1">Target Job ID</label>
+            <label className="block text-sm font-mono text-gray-400 mb-1">Target Job ID</label>
             <div className="flex space-x-2">
               <input
                 type="text"
                 value={jobId}
                 onChange={(e) => setJobId(e.target.value)}
                 placeholder="Enter 8-character Job ID"
-                className="w-full p-2.5 rounded-xl bg-black/50 border border-white/15 font-mono text-xs text-white focus:outline-none focus:border-emerald-400"
+                className="w-full p-2.5 rounded-xl bg-black/50 border border-white/15 font-mono text-sm text-white focus:outline-none focus:border-emerald-400"
               />
               {recentJobs.length > 0 && (
                 <select
                   onChange={(e) => setJobId(e.target.value)}
                   value={jobId}
-                  className="p-2.5 rounded-xl bg-black/50 border border-white/15 font-mono text-xs text-gray-300 focus:outline-none"
+                  className="p-2.5 rounded-xl bg-black/50 border border-white/15 font-mono text-sm text-gray-300 focus:outline-none"
                 >
                   {recentJobs.map(j => (
                     <option key={j.job_id} value={j.job_id}>
@@ -98,11 +98,11 @@ export default function ArtifactGeneratorView({ initialJobId }) {
           </div>
 
           <div>
-            <label className="block text-xs font-mono text-gray-400 mb-1">Target Task Specification</label>
+            <label className="block text-sm font-mono text-gray-400 mb-1">Target Task Specification</label>
             <select
               value={taskType}
               onChange={(e) => setTaskType(e.target.value)}
-              className="w-full p-2.5 rounded-xl bg-black/50 border border-white/15 font-mono text-xs text-white focus:outline-none focus:border-emerald-400"
+              className="w-full p-2.5 rounded-xl bg-black/50 border border-white/15 font-mono text-sm text-white focus:outline-none focus:border-emerald-400"
             >
               <option value="report">report (Requires: date, equipment, findings, rec, approval)</option>
               <option value="summary">summary (Requires: summary, findings, conclusion)</option>
@@ -115,7 +115,7 @@ export default function ArtifactGeneratorView({ initialJobId }) {
             <button
               onClick={handleValidate}
               disabled={loading || !jobId.trim()}
-              className="flex-1 py-2.5 px-4 rounded-xl font-mono text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center space-x-2 transition cursor-pointer disabled:opacity-50"
+              className="flex-1 py-2.5 px-4 rounded-xl font-mono text-sm font-bold bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center space-x-2 transition cursor-pointer disabled:opacity-50"
             >
               <FileCheck2 size={14} className={loading ? 'animate-spin' : ''} />
               <span>{loading ? 'Evaluating...' : 'Run 3-Check Audit'}</span>
@@ -124,7 +124,7 @@ export default function ArtifactGeneratorView({ initialJobId }) {
               href={downloadUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className={`py-2.5 px-4 rounded-xl font-mono text-xs font-bold border flex items-center justify-center space-x-1.5 transition ${
+              className={`py-2.5 px-4 rounded-xl font-mono text-sm font-bold border flex items-center justify-center space-x-1.5 transition ${
                 jobId.trim()
                   ? 'bg-purple-600/20 hover:bg-purple-600/30 border-purple-500/40 text-purple-200 cursor-pointer'
                   : 'bg-white/5 border-white/10 text-gray-500 pointer-events-none'
@@ -137,7 +137,7 @@ export default function ArtifactGeneratorView({ initialJobId }) {
         </div>
 
         {error && (
-          <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs font-mono flex items-center space-x-2">
+          <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-sm font-mono flex items-center space-x-2">
             <AlertTriangle size={14} />
             <span>{error}</span>
           </div>
@@ -160,15 +160,15 @@ export default function ArtifactGeneratorView({ initialJobId }) {
                 <XCircle size={24} className="text-red-400" />
               )}
               <div>
-                <div className="font-mono font-bold text-sm text-white">
+                <div className="font-mono font-bold text-base text-white">
                   {validation.valid ? 'Artifact Verified & Signed' : 'Artifact Gated — Validation Failed'}
                 </div>
-                <div className="font-mono text-xs opacity-80 mt-0.5">
+                <div className="font-mono text-sm opacity-80 mt-0.5 leading-relaxed">
                   {validation.summary || 'All structural requirements and citation evidence inspected.'}
                 </div>
               </div>
             </div>
-            <span className={`font-mono text-xs font-bold px-3 py-1 rounded-full border ${
+            <span className={`font-mono text-sm font-bold px-3 py-1 rounded-full border ${
               validation.valid
                 ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300'
                 : 'bg-red-500/20 border-red-400 text-red-300'
@@ -183,7 +183,7 @@ export default function ArtifactGeneratorView({ initialJobId }) {
             <div className="p-5 rounded-2xl bg-black/40 border border-white/10 backdrop-blur-md shadow-xl flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-mono uppercase text-gray-400">Check 1: Open Check</span>
+                  <span className="text-sm font-mono uppercase text-gray-400">Check 1: Open Check</span>
                   {validation.open_check ? (
                     <CheckCircle2 size={18} className="text-emerald-400" />
                   ) : (
@@ -193,11 +193,11 @@ export default function ArtifactGeneratorView({ initialJobId }) {
                 <div className="font-mono font-bold text-base text-white">
                   {validation.open_check ? 'Valid DOCX Container' : 'Corrupted Archive'}
                 </div>
-                <p className="text-xs text-gray-400 font-mono mt-2">
+                <p className="text-sm text-gray-400 font-mono mt-2 leading-relaxed">
                   Verifies python-docx parses the binary XML tree without parsing corruption.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-white/10 text-[11px] font-mono text-emerald-400">
+              <div className="mt-4 pt-3 border-t border-white/10 text-sm font-mono text-emerald-400">
                 WordprocessingML valid
               </div>
             </div>
@@ -206,7 +206,7 @@ export default function ArtifactGeneratorView({ initialJobId }) {
             <div className="p-5 rounded-2xl bg-black/40 border border-white/10 backdrop-blur-md shadow-xl flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-mono uppercase text-gray-400">Check 2: Sections Check</span>
+                  <span className="text-sm font-mono uppercase text-gray-400">Check 2: Sections Check</span>
                   {validation.sections_check ? (
                     <CheckCircle2 size={18} className="text-emerald-400" />
                   ) : (
@@ -216,11 +216,11 @@ export default function ArtifactGeneratorView({ initialJobId }) {
                 <div className="font-mono font-bold text-base text-white">
                   {validation.sections_check ? 'All Required Headings' : 'Missing Headings'}
                 </div>
-                <p className="text-xs text-gray-400 font-mono mt-2">
+                <p className="text-sm text-gray-400 font-mono mt-2 leading-relaxed">
                   Mandates specific section headers for task <code className="text-purple-300">{taskType}</code>.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-white/10 text-[11px] font-mono text-gray-400 truncate">
+              <div className="mt-4 pt-3 border-t border-white/10 text-sm font-mono text-gray-400 truncate">
                 {validation.missing_sections?.length > 0
                   ? `Missing: ${validation.missing_sections.join(', ')}`
                   : 'All headings present'}
@@ -231,7 +231,7 @@ export default function ArtifactGeneratorView({ initialJobId }) {
             <div className="p-5 rounded-2xl bg-black/40 border border-white/10 backdrop-blur-md shadow-xl flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-mono uppercase text-gray-400">Check 3: Evidence Check</span>
+                  <span className="text-sm font-mono uppercase text-gray-400">Check 3: Evidence Check</span>
                   {validation.evidence_check ? (
                     <CheckCircle2 size={18} className="text-emerald-400" />
                   ) : (
@@ -241,11 +241,11 @@ export default function ArtifactGeneratorView({ initialJobId }) {
                 <div className="font-mono font-bold text-base text-white">
                   {validation.evidence_check ? 'Citations Grounded' : 'Uncited Claims'}
                 </div>
-                <p className="text-xs text-gray-400 font-mono mt-2">
+                <p className="text-sm text-gray-400 font-mono mt-2 leading-relaxed">
                   Scans for grounding citations ("As per inspection report", "Refer SOP-12").
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-white/10 text-[11px] font-mono text-emerald-400">
+              <div className="mt-4 pt-3 border-t border-white/10 text-sm font-mono text-emerald-400">
                 {validation.citation_count ?? 2} Source Citations Verified
               </div>
             </div>

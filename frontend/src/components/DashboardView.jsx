@@ -124,7 +124,7 @@ export default function DashboardView({ onNavigateTab }) {
             <Cpu size={18} className="text-purple-400" />
           </div>
           <div>
-            <div className="text-xl font-bold font-mono text-white">2 Laptops</div>
+            <div className="text-xl font-bold font-mono text-white">2 Nodes</div>
             <div className="text-xs font-mono text-purple-300 mt-1">
               Dual 6GB RTX 4050 GPUs
             </div>
