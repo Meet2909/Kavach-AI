@@ -173,7 +173,8 @@ def evaluate_evidence(user_query: str) -> Dict[str, Any]:
             "track": "GENERAL_THEORY",
             "abstain": False,
             "entity_id": None,
-            "profile": None
+            "profile": None,
+            "model_override": "general" # Use Llama 3.1 for heavy reasoning
         }
 
     entity_id = extract_equipment_id(user_query)
@@ -184,7 +185,8 @@ def evaluate_evidence(user_query: str) -> Dict[str, Any]:
             "track": "GENERAL_UNGROUNDED",
             "abstain": False,
             "entity_id": None,
-            "profile": None
+            "profile": None,
+            "model_override": "specialist" # Use Vajra for fast, lightweight QA
         }
 
     profile = get_entity_profile(entity_id)
@@ -202,7 +204,8 @@ def evaluate_evidence(user_query: str) -> Dict[str, Any]:
         "track": "PLANT_ASSET",
         "abstain": False,
         "entity_id": entity_id,
-        "profile": profile
+        "profile": profile,
+        "model_override": "specialist" # Use Vajra for exact citation formatting on plant assets
     }
 
 def construct_metaprompt(user_query: str, evaluation: Dict[str, Any], task_type: str = "general") -> str:

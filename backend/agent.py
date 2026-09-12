@@ -134,6 +134,18 @@ def execute_agent_loop(task_payload: dict, memory: AgentMemory) -> List[Dict[str
                 user_prompt = memory.context.get('prompt', '')
                 ev = memory.context.get('evidence_eval', {})
                 
+                # Apply dynamic model override from knowledge graph (e.g. use Vajra for fast QA)
+                if ev and ev.get("model_override"):
+                    override_key = ev["model_override"]
+                    from router import load_registry
+                    registry = load_registry()
+                    if override_key in registry:
+                        target_model = registry[override_key]["model_id"]
+                        target_ip = registry[override_key]["host"]
+                        memory.context['target_model'] = target_model
+                        memory.context['target_ip'] = target_ip
+                        memory.add_trace("ROUTING", f"Dynamic override: Query re-routed to {target_model} on {target_ip}.")
+                
                 # Enforce hardware constraints for Laptop 2 (Vaibhav Engine)
                 if "10.73.132.79" in str(target_ip) or "10.12" in str(target_ip):
                     memory.add_trace("SYSTEM", f"Executing hardware VRAM swap to {target_model}...")

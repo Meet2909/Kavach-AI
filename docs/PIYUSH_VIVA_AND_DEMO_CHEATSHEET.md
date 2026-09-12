@@ -159,6 +159,14 @@ graph TD
 > Ye tag seedha hamare SQLite graph me query hota hai jahan `maintenance_history.csv` linked hai.  
 > System turant correlation dikhata hai: 'VALVE-12 identified on pipeline — Alert: 2024-04-10 ticket is currently OPEN (Actuator failure)'."*
 
+### ❓ Q11: "Aapne 'Vajra' model khud se kaise train kiya? Fine-tuning ka pipeline kya tha?"
+> **Aapka Answer:**  
+> *"Sir, humne base model (Qwen2.5-3B) liya aur use specifically hamare strict citation format aur P&ID data par fine-tune kiya. Humne 4 files banayi:  
+> 1. `prepare_dataset.py`: Isne PDFs aur raw data ko parse karke automatically Q&A JSON pairs (Synthetic Data) generate kiye.  
+> 2. `setup.ps1`: Windows par CUDA aur Unsloth (training library) ka air-gapped environment setup kiya.  
+> 3. `train_vajra.py`: QLoRA (4-bit quantization) use karke LoRA adapters attach kiye aur 60 epochs tak train kiya (Loss 4.6 se gir kar 0.02 ho gaya!).  
+> 4. `export_to_ollama.py`: Trained weights ko GGUF format me merge karke direct Ollama me `vajra-model` ke naam se push kar diya."*
+
 ---
 
 ## 5. Live Demo Script (Step-by-Step Kaunsi Command Kab Chalani Hai)
