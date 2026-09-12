@@ -37,8 +37,8 @@ export default function DashboardView({ onNavigateTab }) {
 
   return (
     <div className="space-y-8 animate-fade-in-up">
-      <div className="dashboard-wordmark-wrap">
-        <div className="dashboard-wordmark">KAVACH</div>
+      <div className="flex justify-center w-full py-4 mb-2">
+        <img src="/kawach_name.png" alt="Kavach" className="max-w-[320px] w-full object-contain" />
       </div>
 
       {/* Header Banner */}

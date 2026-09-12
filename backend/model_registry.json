@@ -30,5 +30,15 @@
       "pandas_analysis",
       "csv_filtering"
     ]
+  },
+  "specialist": {
+    "model_id": "vajra-model:latest",
+    "backend": "ollama",
+    "host": "http://10.73.132.136:11434",
+    "capabilities": [
+      "citation_formatting",
+      "fast_qa",
+      "specialized_refinery_knowledge"
+    ]
   }
 }
