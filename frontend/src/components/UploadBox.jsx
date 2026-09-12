@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+﻿import { useState, useRef } from 'react';
 import { 
   UploadCloud, File as FileIcon, CheckCircle2, AlertCircle, ArrowRight, 
   Sparkles, FileText, Image as ImageIcon, Code2, Database, ShieldCheck, RefreshCw 
@@ -157,10 +157,10 @@ export default function UploadBox({ onTaskStarted }) {
       {/* Drag & Drop Upload Zone */}
       <div
         className={`relative rounded-2xl border-2 border-dashed transition-all duration-300 p-8 flex flex-col items-center justify-center cursor-pointer overflow-hidden ${isDragging
-          ? 'border-[#743014] bg-[#743014]/10 scale-[1.01]'
+          ? 'border-[#282B4A]/20 border-2 bg-[#282B4A]/10 scale-[1.01]'
           : selectedFile
-            ? 'border-[#743014] bg-[#743014]/10 backdrop-blur-md'
-            : 'border-gray-300 bg-white hover:border-[#743014] hover:bg-[#743014]/5 backdrop-blur-md'
+            ? 'border-[#282B4A]/20 border-2 bg-[#282B4A]/10 backdrop-blur-md'
+            : 'border-[#282B4A]/20 border-2 bg-[#EEEBDA] hover:border-[#282B4A]/20 border-2 hover:bg-[#282B4A]/10 backdrop-blur-md'
           }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -177,29 +177,29 @@ export default function UploadBox({ onTaskStarted }) {
 
         {selectedFile ? (
           <div className="flex items-center space-x-4">
-            <div className="p-3 rounded-xl bg-[#743014]/15 text-[#743014] border border-[#743014]">
+            <div className="p-3 rounded-xl bg-[#282B4A]/10 text-[#282B4A] border border-[#282B4A]/20 border-2">
               <FileIcon size={32} />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-mono font-bold text-[#442D1C] text-base">{selectedFile.name}</span>
-                <span className="text-sm px-2 py-0.5 rounded-full bg-[#743014]/15 text-[#743014] font-mono border border-[#743014]">
+                <span className="font-mono font-bold text-[#282B4A] text-base">{selectedFile.name}</span>
+                <span className="text-sm px-2 py-0.5 rounded-full bg-[#282B4A]/10 text-[#282B4A] font-mono border border-[#282B4A]/20 border-2">
                   {(selectedFile.size / 1024).toFixed(1)} KB
                 </span>
               </div>
-              <p className="text-sm text-gray-600 mt-1 font-mono leading-relaxed">
+              <p className="text-sm text-[#282B4A] mt-1 font-mono leading-relaxed">
                 Artifact ready for sovereign RAG indexing & model routing. Click to change file.
               </p>
             </div>
           </div>
         ) : (
           <div className="flex flex-col items-center text-center space-y-3">
-            <div className="p-4 rounded-2xl bg-[#743014]/15 border border-[#743014] text-[#743014] shadow-inner">
+            <div className="p-4 rounded-2xl bg-[#282B4A]/10 border border-[#282B4A]/20 border-2 text-[#282B4A] shadow-inner">
               <UploadCloud size={36} />
             </div>
             <div>
-              <p className="font-mono text-base font-semibold text-[#442D1C]">Drag & drop engineering artifact, or browse</p>
-              <p className="text-base text-gray-600 font-cabinet mt-1 leading-relaxed">
+              <p className="font-mono text-base font-semibold text-[#282B4A]">Drag & drop engineering artifact, or browse</p>
+              <p className="text-base text-[#282B4A] font-cabinet mt-1 leading-relaxed">
                 Supports P&ID Diagrams (.png, .jpg), Plant Standards (.pdf), Maintenance Logs (.csv)
               </p>
             </div>
@@ -209,7 +209,7 @@ export default function UploadBox({ onTaskStarted }) {
 
       {/* Task Type Selector Grid */}
       <div className="space-y-3">
-        <label className="block text-base font-cabinet font-semibold tracking-wider text-gray-600 uppercase">
+        <label className="block text-base font-cabinet font-semibold tracking-wider text-[#282B4A] uppercase">
           1. Select Autonomous Agent Pipeline
         </label>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -222,22 +222,22 @@ export default function UploadBox({ onTaskStarted }) {
                 type="button"
                 onClick={() => handleTaskSelection(opt.id)}
                 className={`p-3.5 rounded-xl text-left transition-all duration-200 border flex flex-col justify-between ${isSelected
-                  ? 'border-[#743014] bg-[#743014]/15 shadow-[0_0_20px_rgba(116,48,20,0.15)]'
-                  : 'border-gray-200 bg-white hover:border-[#743014]/50 hover:bg-[#743014]/5'
+                  ? 'border-[#282B4A]/20 border-2 bg-[#282B4A]/10 shadow-[0_0_20px_rgba(116,48,20,0.15)]'
+                  : 'border-[#282B4A]/20 border-2 bg-[#EEEBDA] hover:border-[#282B4A]/20 border-2 hover:bg-[#282B4A]/10'
                   }`}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <div className={`p-2 rounded-lg ${isSelected ? 'bg-[#743014]/15 text-[#743014]' : 'bg-gray-50 text-gray-600'}`}>
+                  <div className={`p-2 rounded-lg ${isSelected ? 'bg-[#282B4A]/10 text-[#282B4A]' : 'bg-gray-50 text-[#282B4A]'}`}>
                     <Icon size={18} />
                   </div>
-                  <span className="text-sm font-mono px-2 py-0.5 rounded border border-gray-200 text-gray-600">
+                  <span className="text-sm font-mono px-2 py-0.5 rounded border border-[#282B4A]/20 border-2 text-[#282B4A]">
                     {opt.badge}
                   </span>
                 </div>
                 <div>
-                  <div className="font-mono font-semibold text-base text-[#442D1C]">{opt.label}</div>
-                  <div className="text-sm text-gray-600 mt-1 leading-relaxed">{opt.desc}</div>
-                  <div className="text-sm font-cabinet text-[#743014] mt-2 font-medium">Node: {opt.model}</div>
+                  <div className="font-mono font-semibold text-base text-[#282B4A]">{opt.label}</div>
+                  <div className="text-sm text-[#282B4A] mt-1 leading-relaxed">{opt.desc}</div>
+                  <div className="text-sm font-cabinet text-[#282B4A] mt-2 font-medium">Node: {opt.model}</div>
                 </div>
               </button>
             );
@@ -248,10 +248,10 @@ export default function UploadBox({ onTaskStarted }) {
       {/* Engineering Prompt Specification */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <label className="text-sm font-mono font-semibold tracking-wider text-gray-600 uppercase">
+          <label className="text-sm font-mono font-semibold tracking-wider text-[#282B4A] uppercase">
             2. Operational Instruction & Constraints
           </label>
-          <div className="flex items-center space-x-1.5 text-sm text-[#743014] font-mono">
+          <div className="flex items-center space-x-1.5 text-sm text-[#282B4A] font-mono">
             <Sparkles size={13} />
             <span>Preset Templates</span>
           </div>
@@ -267,8 +267,8 @@ export default function UploadBox({ onTaskStarted }) {
                 type="button"
                 onClick={() => handlePresetClick(preset)}
                 className={`text-base font-cabinet px-3 py-1.5 rounded-lg border transition leading-relaxed ${isActive
-                    ? 'bg-[#743014]/15 border-[#743014] text-[#743014] shadow-[0_0_10px_rgba(116,48,20,0.15)]'
-                    : 'border-gray-200 bg-white hover:bg-[#743014]/10 hover:border-[#743014] text-gray-600'
+                    ? 'bg-[#282B4A]/10 border-[#282B4A]/20 border-2 text-[#282B4A] shadow-[0_0_10px_rgba(116,48,20,0.15)]'
+                    : 'border-[#282B4A]/20 border-2 bg-[#EEEBDA] hover:bg-[#282B4A]/10 hover:border-[#282B4A]/20 border-2 text-[#282B4A]'
                   }`}
               >
                 {preset.label}
@@ -282,13 +282,13 @@ export default function UploadBox({ onTaskStarted }) {
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           placeholder="Enter prompt instructions for the autonomous agent loop..."
-          className="w-full p-4 rounded-xl bg-white border border-gray-200 focus:border-[#743014] focus:outline-none font-stardom text-base text-[#442D1C] placeholder-gray-400 backdrop-blur-sm transition"
+          className="w-full p-4 rounded-xl bg-[#EEEBDA] border border-[#282B4A]/20 border-2 focus:border-[#282B4A]/20 border-2 focus:outline-none font-stardom text-base text-[#282B4A] placeholder-gray-400 backdrop-blur-sm transition"
         />
       </div>
 
       {/* Error Alert */}
       {error && (
-        <div className="p-4 rounded-xl bg-[#743014]/10 border border-[#743014] text-[#743014] flex items-start space-x-3 text-base font-mono">
+        <div className="p-4 rounded-xl bg-[#282B4A]/10 border border-[#282B4A]/20 border-2 text-[#282B4A] flex items-start space-x-3 text-base font-mono">
           <AlertCircle size={18} className="shrink-0 mt-0.5" />
           <span>{error}</span>
         </div>
@@ -296,8 +296,8 @@ export default function UploadBox({ onTaskStarted }) {
 
       {/* Submit Action Button */}
       <div className="flex justify-end items-center space-x-4 pt-2">
-        <div className="text-base text-gray-600 font-stardom flex items-center space-x-1.5">
-          <ShieldCheck size={14} className="text-[#9D9167]" />
+        <div className="text-base text-[#282B4A] font-stardom flex items-center space-x-1.5">
+          <ShieldCheck size={14} className="text-[#282B4A]" />
           <span>Least-Privilege Tool Gate Armed</span>
         </div>
         <button
@@ -322,3 +322,4 @@ export default function UploadBox({ onTaskStarted }) {
     </div>
   );
 }
+
