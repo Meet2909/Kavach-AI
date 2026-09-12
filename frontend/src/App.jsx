@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Sidebar from './components/Sidebar.jsx';
-import Prism from './components/Prism.jsx';
+
 import DashboardView from './components/DashboardView.jsx';
 import UploadBox from './components/UploadBox.jsx';
 import TracePanel from './components/TracePanel.jsx';
@@ -19,6 +19,37 @@ export default function App() {
   const [jobStatus, setJobStatus] = useState('WAITING');
   const [apiOnline, setApiOnline] = useState(false);
   const [airgapped, setAirgapped] = useState(true);
+  const [sidebarWidth, setSidebarWidth] = useState(300);
+  const isDraggingRef = useRef(false);
+
+  const handleMouseDown = (e) => {
+    isDraggingRef.current = true;
+    document.body.style.cursor = 'col-resize';
+  };
+
+  const handleMouseMove = useCallback((e) => {
+    if (!isDraggingRef.current) return;
+    let newWidth = e.clientX;
+    if (newWidth < 220) newWidth = 220;
+    if (newWidth > 600) newWidth = 600;
+    setSidebarWidth(newWidth);
+  }, []);
+
+  const handleMouseUp = useCallback(() => {
+    if (isDraggingRef.current) {
+      isDraggingRef.current = false;
+      document.body.style.cursor = 'default';
+    }
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [handleMouseMove, handleMouseUp]);
 
   // Poll backend health & status on boot
   useEffect(() => {
@@ -90,13 +121,13 @@ export default function App() {
       case 1:
         return (
           <div className="space-y-6">
-            <div className="border-b border-white/10 pb-4">
-              <div className="flex items-center space-x-2 text-xs font-mono text-purple-400 uppercase tracking-wider">
+            <div className="border-b border-gray-200 pb-4">
+              <div className="flex items-center space-x-2 text-xs font-mono text-[#743014] uppercase tracking-wider">
                 <span>Tab 02</span>
                 <ChevronRight size={12} />
                 <span>Multimodal Intake</span>
               </div>
-              <h1 className="text-3xl font-bold tracking-tight mt-1 font-mono text-white">Document Intake</h1>
+              <h1 className="text-3xl font-bold tracking-tight mt-1 font-mono text-[#442D1C]">Document Intake</h1>
             </div>
             <UploadBox onTaskStarted={handleTaskStarted} />
           </div>
@@ -104,13 +135,13 @@ export default function App() {
       case 2:
         return (
           <div className="space-y-6">
-            <div className="border-b border-white/10 pb-4">
-              <div className="flex items-center space-x-2 text-xs font-mono text-purple-400 uppercase tracking-wider">
+            <div className="border-b border-gray-200 pb-4">
+              <div className="flex items-center space-x-2 text-xs font-mono text-[#743014] uppercase tracking-wider">
                 <span>Tab 03</span>
                 <ChevronRight size={12} />
                 <span>State Machine Execution</span>
               </div>
-              <h1 className="text-3xl font-bold tracking-tight mt-1 font-mono text-white">Active AI Jobs</h1>
+              <h1 className="text-3xl font-bold tracking-tight mt-1 font-mono text-[#442D1C]">Active AI Jobs</h1>
             </div>
             <TracePanel 
               jobId={currentJobId} 
@@ -138,36 +169,28 @@ export default function App() {
   };
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-[#060608] text-white select-none">
+    <div className="relative w-screen h-screen overflow-hidden bg-[#F9F7F3] text-[#442D1C] select-none">
       
-      {/* 3D WebGL PRISM BACKGROUND */}
-      <div className="fixed inset-0 w-full h-full pointer-events-none z-0 opacity-40">
-        <Prism
-          height={4}
-          baseWidth={5}
-          animationType="3drotate"
-          glow={0.5}
-          noise={0.1}
-          transparent
-          scale={1.3} 
-          hueShift={0}
-          colorFrequency={2.8}
-          timeScale={0.12} 
-        />
-      </div>
-
       {/* FOREGROUND LAYOUT */}
-      <div className="relative z-10 flex w-full h-full bg-black/40">
+      <div className="relative z-10 flex w-full h-full bg-transparent">
         
         {/* COLLAPSIBLE / DOCKED FROSTED SIDEBAR */}
-        <aside className="w-[300px] shrink-0 h-full border-r border-white/10 bg-black/60 backdrop-blur-2xl flex flex-col justify-between shadow-[15px_0_35px_rgba(0,0,0,0.6)]">
+        <aside 
+          className="shrink-0 h-full border-r border-gray-200 bg-[#E8D1A7] backdrop-blur-2xl flex flex-col justify-between shadow-[15px_0_35px_rgba(0,0,0,0.05)] relative"
+          style={{ width: `${sidebarWidth}px`, minWidth: `${sidebarWidth}px` }}
+        >
+          {/* Resize Handle */}
+          <div 
+            className="w-1.5 cursor-col-resize bg-transparent hover:bg-[#743014] transition-colors z-50 absolute right-0 top-0 bottom-0"
+            onMouseDown={handleMouseDown}
+          />
           {/* Logo & Header */}
           <div className="p-8 pb-4">
             <div className="flex flex-col">
               <div className="flex items-center">
-                <span className="font-stardom text-2xl tracking-widest text-white">कAVACH</span>
+                <span className="font-stardom text-2xl tracking-widest text-[#442D1C]">कAVACH</span>
               </div>
-              <div className="text-[10px] text-purple-400 font-mono tracking-wider mt-1">SOVEREIGN AIR-GAP OS</div>
+              <div className="text-[10px] text-[#743014] font-mono tracking-wider mt-1">SOVEREIGN AIR-GAP OS</div>
             </div>
           </div>
 
@@ -176,19 +199,19 @@ export default function App() {
             <Sidebar 
               defaultActive={activeTab} 
               onItemClick={(index) => setActiveTab(index)} 
-              textColor="#d1d5db"
-              accentColor="#c084fc"
+              textColor="#4b5563"
+              accentColor="#743014"
             />
           </div>
 
           {/* Sidebar Status Footer */}
-          <div className="p-6 border-t border-white/10 bg-white/[0.02]">
+          <div className="p-6 border-t border-gray-200 bg-gray-50/50">
             <div className="flex items-center justify-between text-xs font-mono">
               <div className="flex items-center space-x-2">
-                <span className={`w-2 h-2 rounded-full ${apiOnline ? 'bg-green-400 animate-pulse' : 'bg-red-500'}`}></span>
-                <span className="text-gray-400">{apiOnline ? 'Gateway Live' : 'Connecting...'}</span>
+                <span className={`w-2 h-2 rounded-full ${apiOnline ? 'bg-[#9D9167]/20 animate-pulse' : 'bg-[#743014]/15'}`}></span>
+                <span className="text-gray-600">{apiOnline ? 'Gateway Live' : 'Connecting...'}</span>
               </div>
-              <span className="text-[11px] px-2 py-0.5 rounded bg-white/5 border border-white/10 text-emerald-300">
+              <span className="text-[11px] px-2 py-0.5 rounded bg-[#9D9167]/20 border border-[#9D9167] text-[#442D1C] font-medium">
                 Air-Gapped
               </span>
             </div>
@@ -198,15 +221,15 @@ export default function App() {
         {/* MAIN CONTENT AREA */}
         <main className="flex-1 h-full overflow-y-auto flex flex-col">
           {/* Top Operational Bar */}
-          <header className="h-16 px-10 border-b border-white/10 bg-black/30 backdrop-blur-md flex items-center justify-between shrink-0">
-            <div className="flex items-center space-x-4 text-xs font-mono text-gray-400">
-              <span className="text-gray-200 font-semibold font-stardom text-xl">Petroleum Infrastructure Cluster</span>
-              <span className="text-white/20">|</span>
+          <header className="h-16 px-10 border-b border-gray-200 bg-white/50 backdrop-blur-md flex items-center justify-between shrink-0">
+            <div className="flex items-center space-x-4 text-xs font-mono text-gray-600">
+              <span className="text-[#442D1C] font-semibold font-stardom text-xl">Petroleum Infrastructure Cluster</span>
+              <span className="text-gray-300">|</span>
               <span className="font-stardom text-base">MRPL Refinery Node</span>
               {currentJobId && (
                 <>
-                  <span className="text-white/20">|</span>
-                  <span className="text-purple-300 flex items-center space-x-1">
+                  <span className="text-gray-300">|</span>
+                  <span className="text-[#743014] flex items-center space-x-1">
                     <Activity size={12} className="animate-pulse" />
                     <span>Job Active: {currentJobId}</span>
                   </span>
@@ -226,3 +249,4 @@ export default function App() {
     </div>
   );
 }
+
