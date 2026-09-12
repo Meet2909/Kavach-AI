@@ -1,0 +1,14 @@
+torch==2.4.0
+torchvision
+torchaudio
+--index-url https://download.pytorch.org/whl/cu121
+trl
+peft
+accelerate
+bitsandbytes
+transformers
+fastapi
+uvicorn
+pydantic
+# Unsloth is installed via git in the setup script, but here is the fallback:
+# "unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git"
