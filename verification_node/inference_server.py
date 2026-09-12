@@ -60,5 +60,5 @@ def verify_output(request: VerificationRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    # Run the server on port 8000
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Run the server on port 8001
+    uvicorn.run(app, host="0.0.0.0", port=8001)
