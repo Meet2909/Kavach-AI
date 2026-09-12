@@ -8,7 +8,7 @@ def load_registry():
     with open(REGISTRY_PATH, 'r') as f:
         return json.load(f)
 
-def route_task(task_type: str, file_type: str):
+def route_task(task_type: str, file_type: str = ""):
     """
     Rule-based router.
     Returns:
@@ -16,26 +16,28 @@ def route_task(task_type: str, file_type: str):
         "selected_model": <model_key>,
         "reason": <string explaining why>,
         "rejected_models": <list of rejected models>,
-        "confidence": <float>
+        "confidence": <float>,
+        "host": <node_url>,
+        "model_id": <model_tag>
       }
     """
     registry = load_registry()
     models = list(registry.keys())
     
-    task_type = task_type.lower()
-    file_type = file_type.lower()
+    task_type = (task_type or "").lower()
+    file_type = (file_type or "").lower().lstrip('.')
     
-    if file_type in ['png', 'jpg', 'jpeg'] or task_type in ['p&id', 'vision', 'ocr', 'scanned_pdf']:
+    if file_type in ['png', 'jpg', 'jpeg', 'webp', 'bmp'] or any(k in task_type for k in ['p&id', 'p_and_id', 'vision', 'ocr', 'scanned_pdf', 'image', 'diagram']):
         selected = 'vision'
-        reason = "Task involves image processing or scanned documents."
+        reason = "Task involves image processing, P&ID diagram analysis, or visual inspection."
         confidence = 0.95
-    elif file_type == 'csv' or 'calculation' in task_type or 'code' in task_type:
+    elif file_type in ['csv', 'xlsx', 'xls'] or any(k in task_type for k in ['calculation', 'code', 'csv_query', 'tabular', 'filter']):
         selected = 'coder'
-        reason = "Task involves structured data analysis or calculation."
+        reason = "Task involves structured tabular data analysis or code calculations."
         confidence = 0.90
     else:
         selected = 'general'
-        reason = "Task is general text reasoning or summarization."
+        reason = "Task is general technical text reasoning or summarization."
         confidence = 0.85
 
     rejected = [m for m in models if m != selected]

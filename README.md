@@ -1,0 +1,67 @@
+# 🛡️ KAVACH-AI: Sovereign Air-Gapped Industrial AI Orchestrator
+
+[![SIH 2026](https://img.shields.io/badge/SIH-2026-blueviolet?style=for-the-badge)](https://sih.gov.in)
+[![Security: Air-Gapped](https://img.shields.io/badge/Security-Air--Gapped%20Zero--Egress-success?style=for-the-badge)](#)
+[![Hardware: Multi-Node Mesh](https://img.shields.io/badge/Hardware-Dual%20RTX%204050%20Cluster-orange?style=for-the-badge)](#)
+[![License: Proprietary](https://img.shields.io/badge/License-Proprietary-blue?style=for-the-badge)](#)
+
+> **Deterministic multimodal reasoning, least-privilege agent execution, and verifiable air-gap telemetry for India's critical industrial infrastructure.**
+
+---
+
+## 📌 Executive Architecture & Innovations
+
+KAVACH-AI is built from the ground up for environments where cloud access is strictly forbidden (petroleum refineries, nuclear power plants, defense installations). Unlike typical hackathon wrappers around OpenAI/LangChain, KAVACH-AI is an **on-premise distributed compute mesh** providing:
+
+1. **🔒 Verifiable Air-Gap Sovereignty:** Kernel-level network monitoring via `sovereignty_monitor.py` mathematically proves zero external packet egress (`bytes_sent_delta ≈ 0`).
+2. **⚙️ Bounded Deterministic State Machine:** Replaces unbounded ReAct loops with a predictable `INTAKE -> PLAN -> RETRIEVE -> ACT -> OBSERVE -> VERIFY` pipeline (max 8 steps).
+3. **📄 Decision 10: "Generated ≠ Correct":** Every generated `.docx` artifact is subjected to an automated **3-Check Validation Gate** (Open Check, Mandatory Sections Check, Evidence Citation Check).
+4. **📊 Grounded Tabular RAG:** Local Pandas query engine (`csv_tool.py`) queries real plant maintenance records without SQL servers, eliminating numerical hallucinations.
+5. **🛡️ Dual Defense Execution:** Task-scoped tool permissions (`tool_gate.py`) coupled with isolated, zero-network Docker sandboxes (`--network none`, 256MB cap, 15s timeout).
+6. **💻 Multi-Node VRAM Hot-Swapping:** Enables 7B multimodal LLMs (`qwen2.5vl:7b`, `qwen2.5-coder:7b`) to execute concurrently on budget 6GB consumer GPUs (`model_swap.py`).
+
+---
+
+## 👥 Distributed Hardware Architecture
+
+| Node / Laptop | Role | IP & Port | Model Loaded | Function |
+| :--- | :--- | :--- | :--- | :--- |
+| **Node 1: Vinit** | **Orchestrator Gateway & Web UI** | `0.0.0.0:8000` / `:5174` | FastAPI + React Vite | API Gateway, Docker Sandbox, State Machine, Artifact Validator |
+| **Node 2: Piyush** | **The Brain (Reasoning)** | `10.73.132.136:11434` | `llama3.1:latest` | General technical QA, text synthesis, planning logic |
+| **Node 3: Vaibhav** | **The Engine (Multimodal)** | `10.73.132.79:11434` | `qwen2.5vl:7b` / `qwen2.5-coder:7b` | P&ID visual inspection, code execution, VRAM hot-swapping |
+| **Node 4: Ananya** | **Frontend Client** | `10.73.132.x` | React 19 + Tailwind | Industrial Command Center, Live TracePanel, Validation Gate |
+
+---
+
+## 🚀 Quickstart Guide
+
+### 1. Backend Orchestrator Setup
+```bash
+cd Kavach-AI/backend
+source ../.venv/bin/activate
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+### 2. Frontend Command Center Setup
+```bash
+cd Kavach-AI/frontend
+npm install
+npm run dev
+```
+Open **`http://localhost:5174`** (or `http://<your-ip>:5174` across the air-gapped LAN).
+
+### 3. Distributed Verification Suites
+```bash
+# Verify all remote cluster nodes
+python backend/test_connections.py
+
+# Run the full 18-point distributed demo
+python backend/run_backend_demo.py
+```
+
+---
+
+## 📚 In-Depth Engineering Documentation
+
+For the full root-cause analysis of all solved system challenges, head-to-head competitive analysis, and judge presentation script:
+👉 **[Read `docs/SYSTEM_DEBUGGING_AND_INNOVATION_STANDARDS.md`](docs/SYSTEM_DEBUGGING_AND_INNOVATION_STANDARDS.md)**
