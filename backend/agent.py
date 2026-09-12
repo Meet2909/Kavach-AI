@@ -11,8 +11,10 @@ from typing import Dict, Any, List
 from router import route_task                 # Piyush's deterministic router
 from model_swap import swap_model             # Vaibhav's VRAM hot-swap manager
 from pdf_parser import extract_and_chunk_pdf  # The PyMuPDF text extractor
-from artifact_generator import generate_artifact # Vinit's docx generator
-from artifact_validator import validate_artifact # Vinit's 3-check validator
+from tool_gate import check_permission, get_allowed_tools, Verdict
+from artifact_generator import generate_artifact
+from artifact_validator import validate_artifact
+from audit import write_audit_log # Vinit's 3-check validator
 from knowledge_graph import evaluate_evidence, construct_metaprompt # Sovereign Graph & Metaprompt Engine
 
 # ==============================================================================
@@ -142,30 +144,89 @@ def execute_agent_loop(task_payload: dict, memory: AgentMemory) -> List[Dict[str
                 
                 memory.add_trace(current_state.value, f"Firing inference request to {target_model} on {target_ip}.")
                 
-                # Assemble the 4-Pillar Metaprompt
-                grounded_prompt = construct_metaprompt(user_prompt, ev)
+                # Assemble the 4-Pillar Metaprompt — pass task_type so vision gets image-aware prompt
+                grounded_prompt = construct_metaprompt(user_prompt, ev, task_type=memory.context.get('task_type', 'general'))
                 
+                # Prepare JSON Payload
+                request_payload = {
+                    "model": target_model,
+                    "prompt": grounded_prompt,
+                    "stream": False
+                }
+                
+                # Base64 encode and attach visual asset if present
+                # Images are compressed first to avoid 400 Bad Request from Ollama (payload too large)
+                file_path = memory.context.get('file_path')
+                if file_path and any(file_path.lower().endswith(ext) for ext in ['.png', '.jpg', '.jpeg', '.webp', '.bmp']):
+                    import base64, io
+                    try:
+                        from PIL import Image
+                        img = Image.open(file_path).convert("RGB")
+                        # Resize to max 1024px on longest side — keeps payload under ~300KB
+                        img.thumbnail((1024, 1024), Image.LANCZOS)
+                        buf = io.BytesIO()
+                        img.save(buf, format="JPEG", quality=85)
+                        b64_img = base64.b64encode(buf.getvalue()).decode('utf-8')
+                        memory.add_trace(current_state.value, f"Image compressed & encoded ({len(b64_img)//1024} KB, max 1024px).")
+                    except ImportError:
+                        # Pillow not installed — send raw (may be large)
+                        with open(file_path, "rb") as img_file:
+                            b64_img = base64.b64encode(img_file.read()).decode('utf-8')
+                        memory.add_trace(current_state.value, f"Attached raw base64 image ({len(b64_img)//1024} KB). Install Pillow to compress.")
+                    except Exception as e:
+                        b64_img = None
+                        memory.add_trace("WARN", f"Could not encode visual asset: {e}")
+                    
+                    if b64_img:
+                        request_payload["images"] = [b64_img]
+
                 # Execute Live Distributed Ollama Inference
                 host_url = target_ip if str(target_ip).startswith("http") else f"http://{target_ip}"
+                
+                # Pre-flight: verify the target model is actually available on the remote node
                 try:
-                    payload = json.dumps({
-                        "model": target_model,
-                        "prompt": grounded_prompt,
-                        "stream": False
-                    }).encode('utf-8')
+                    tags_req = urllib.request.Request(f"{host_url}/api/tags", method="GET")
+                    with urllib.request.urlopen(tags_req, timeout=5) as tags_resp:
+                        tags_data = json.loads(tags_resp.read().decode())
+                        available_models = [m.get("name", "") for m in tags_data.get("models", [])]
+                        # Check if target model (or its base name) is in the list
+                        model_found = any(target_model.split(":")[0] in m for m in available_models)
+                        if not model_found:
+                            memory.add_trace("WARN", f"Model '{target_model}' NOT found on {host_url}. Available: {available_models}. Run: ollama pull {target_model}")
+                            if not memory.context.get('raw_response'):
+                                memory.context['inference_failed'] = True
+                            current_state = AgentState.OBSERVE
+                            continue
+                        else:
+                            memory.add_trace(current_state.value, f"Model '{target_model}' confirmed available on {host_url}.")
+                except Exception:
+                    pass  # If tags check fails, still try inference
+
+                try:
+                    payload = json.dumps(request_payload).encode('utf-8')
                     req = urllib.request.Request(
                         f"{host_url}/api/generate",
                         data=payload,
                         headers={'Content-Type': 'application/json'}
                     )
-                    with urllib.request.urlopen(req, timeout=90) as response:
+                    # Vision models processing large base64 images need more time (2-3 min on laptop GPU)
+                    task_type_ctx = memory.context.get('task_type', 'general')
+                    inference_timeout = 300 if task_type_ctx in ('vision', 'p_and_id', 'image') else 90
+                    with urllib.request.urlopen(req, timeout=inference_timeout) as response:
                         gen_data = json.loads(response.read().decode())
                         gen_text = gen_data.get('response', '').strip()
                         memory.context['raw_response'] = gen_text
                         memory.add_trace(current_state.value, f"Inference complete ({len(gen_text)} chars generated).")
                 except Exception as infer_err:
-                    memory.add_trace("WARN", f"Live node unreachable ({infer_err}), falling back to grounded heuristic.")
-                    memory.context['raw_response'] = f"Grounded response for {user_prompt} based on verified graph context."
+                    memory.add_trace("WARN", f"Live node unreachable ({infer_err}).")
+                    # Only mark as failed if we have NO prior successful response.
+                    # If a previous attempt already captured output, preserve it — 
+                    # don't let a retry timeout erase a good result.
+                    if not memory.context.get('raw_response'):
+                        memory.context['raw_response'] = None
+                        memory.context['inference_failed'] = True
+                    else:
+                        memory.add_trace("WARN", "Retry timed out, but preserving prior successful response.")
                 
                 current_state = AgentState.OBSERVE
                 
@@ -208,5 +269,14 @@ def execute_agent_loop(task_payload: dict, memory: AgentMemory) -> List[Dict[str
         except Exception as e:
             memory.add_trace("FAILED", f"System exception caught: {str(e)}")
             current_state = AgentState.FAILED
+
+    # Write the immutable cryptographic audit log right before returning
+    job_dir = memory.context.get('job_dir')
+    if job_dir:
+        try:
+            job_id = os.path.basename(job_dir)
+            write_audit_log(job_id, job_dir, memory.trace_log, memory.context)
+        except Exception as audit_err:
+            memory.add_trace("WARN", f"Failed to seal audit log: {audit_err}")
 
     return memory.trace_log

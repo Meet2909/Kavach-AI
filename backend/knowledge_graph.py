@@ -205,7 +205,7 @@ def evaluate_evidence(user_query: str) -> Dict[str, Any]:
         "profile": profile
     }
 
-def construct_metaprompt(user_query: str, evaluation: Dict[str, Any]) -> str:
+def construct_metaprompt(user_query: str, evaluation: Dict[str, Any], task_type: str = "general") -> str:
     """
     Assembles the 4-Pillar Industrial Metaprompt:
     1. Role & Persona (Senior Reliability Engineer)
@@ -214,8 +214,24 @@ def construct_metaprompt(user_query: str, evaluation: Dict[str, Any]) -> str:
     4. Chain-of-Thought (Step-by-Step)
     """
     if evaluation.get("track") == "GENERAL_THEORY" or not evaluation.get("profile"):
-        return f"""
-[ROLE]: You are KAVACH-AI Sovereign Industrial Assistant.
+        # For vision tasks — explicitly tell the model to analyze the attached image
+        if task_type in ("vision", "p_and_id", "image"):
+            return f"""[ROLE]: You are KAVACH-AI, a Senior Industrial P&ID Inspection Engineer.
+An image of a P&ID (Piping and Instrumentation Diagram) has been attached to this request.
+
+[TASK]: Visually analyze the attached P&ID diagram image in full detail. Your analysis MUST include:
+1. List all visible equipment (pumps, valves, heat exchangers, tanks, compressors, sensors, etc.)
+2. Describe the flow paths and pipelines shown
+3. Identify any instrumentation tags (e.g. FT-101, PT-202, LV-301) visible in the diagram
+4. Flag any visual anomalies, missing components, or potential safety concerns
+5. Give a concise overall assessment of the P&ID circuit shown
+
+[USER QUERY]: {user_query}
+
+[CRITICAL]: Base your findings ONLY on what is visible in the attached image. Do NOT guess or fabricate data not present in the image.
+"""
+        # Standard general query
+        return f"""[ROLE]: You are KAVACH-AI Sovereign Industrial Assistant.
 Provide a clear, technically rigorous answer to the user's engineering inquiry.
 
 [USER QUERY]:

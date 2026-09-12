@@ -2,11 +2,11 @@
 backend/test_graph_memory.py — KAVACH-AI Sovereign Graph & Metaprompt Test Suite
 =================================================================================
 Automated verification for:
-  - Point #4: Revision-aware retrieval & conflict detection
-  - Point #5: Abstention on bad evidence
-  - Point #13: Shared cross-agent memory
-  - Point #16: Incremental local re-indexing
-  - Real Metaprompt inference through agent state machine
+- Point #4: Revision-aware retrieval & conflict detection
+- Point #5: Abstention on bad evidence
+- Point #13: Shared cross-agent memory
+- Point #16: Incremental local re-indexing
+- Real Metaprompt inference through agent state machine
 """
 
 import sys

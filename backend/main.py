@@ -367,6 +367,22 @@ def sovereignty_processes():
     return get_process_network_usage()
 
 
+@app.post("/sovereignty/reload_nodes")
+def sovereignty_reload_nodes():
+    """
+    DEMO DAY ENDPOINT: Call this after switching hotspots or when IPs change.
+    Re-detects the /24 subnet from the orchestrator's current NIC automatically.
+    No manual subnet editing needed — just reconnect and call this endpoint.
+    """
+    import sovereignty_monitor as sm
+    sm.CLUSTER_SUBNET = sm.detect_cluster_subnet()
+    return {
+        "status"        : "reloaded",
+        "cluster_subnet": f"{sm.CLUSTER_SUBNET}0/24",
+        "message"       : f"Subnet auto-detected as {sm.CLUSTER_SUBNET}0/24. All IPs in this range are now trusted."
+    }
+
+
 # ─────────────────────────────────────────────
 # ENDPOINT 15: List Jobs
 # ─────────────────────────────────────────────
