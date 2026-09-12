@@ -173,11 +173,11 @@ export default function UploadBox({ onTaskStarted }) {
             <div>
               <div className="flex items-center space-x-2">
                 <span className="font-mono font-bold text-white text-base">{selectedFile.name}</span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-mono border border-purple-500/30">
+                <span className="text-sm px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-mono border border-purple-500/30">
                   {(selectedFile.size / 1024).toFixed(1)} KB
                 </span>
               </div>
-              <p className="text-xs text-gray-400 mt-1 font-mono">
+              <p className="text-sm text-gray-400 mt-1 font-mono leading-relaxed">
                 Artifact ready for sovereign RAG indexing & model routing. Click to change file.
               </p>
             </div>
@@ -189,7 +189,7 @@ export default function UploadBox({ onTaskStarted }) {
             </div>
             <div>
               <p className="font-mono text-base font-semibold text-white">Drag & drop engineering artifact, or browse</p>
-              <p className="text-sm text-gray-400 font-cabinet mt-1">
+              <p className="text-base text-gray-400 font-cabinet mt-1 leading-relaxed">
                 Supports P&ID Diagrams (.png, .jpg), Plant Standards (.pdf), Maintenance Logs (.csv)
               </p>
             </div>
@@ -199,7 +199,7 @@ export default function UploadBox({ onTaskStarted }) {
 
       {/* Task Type Selector Grid */}
       <div className="space-y-3">
-        <label className="block text-sm font-cabinet font-semibold tracking-wider text-gray-400 uppercase">
+        <label className="block text-base font-cabinet font-semibold tracking-wider text-gray-400 uppercase">
           1. Select Autonomous Agent Pipeline
         </label>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -232,14 +232,14 @@ export default function UploadBox({ onTaskStarted }) {
                   <div className={`p-2 rounded-lg ${isSelected ? 'bg-purple-500/30 text-purple-200' : 'bg-white/5 text-gray-400'}`}>
                     <Icon size={18} />
                   </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded border border-white/10 text-gray-300">
+                  <span className="text-sm font-mono px-2 py-0.5 rounded border border-white/10 text-gray-300">
                     {opt.badge}
                   </span>
                 </div>
                 <div>
-                  <div className="font-mono font-semibold text-sm text-white">{opt.label}</div>
-                  <div className="text-xs text-gray-400 mt-1 leading-snug">{opt.desc}</div>
-                  <div className="text-xs font-cabinet text-purple-400 mt-2 font-medium">Node: {opt.model}</div>
+                  <div className="font-mono font-semibold text-base text-white">{opt.label}</div>
+                  <div className="text-sm text-gray-400 mt-1 leading-relaxed">{opt.desc}</div>
+                  <div className="text-sm font-cabinet text-purple-400 mt-2 font-medium">Node: {opt.model}</div>
                 </div>
               </button>
             );
@@ -250,10 +250,10 @@ export default function UploadBox({ onTaskStarted }) {
       {/* Engineering Prompt Specification */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <label className="text-xs font-mono font-semibold tracking-wider text-gray-400 uppercase">
+          <label className="text-sm font-mono font-semibold tracking-wider text-gray-400 uppercase">
             2. Operational Instruction & Constraints
           </label>
-          <div className="flex items-center space-x-1.5 text-xs text-purple-400 font-mono">
+          <div className="flex items-center space-x-1.5 text-sm text-purple-400 font-mono">
             <Sparkles size={13} />
             <span>Preset Templates</span>
           </div>
@@ -271,7 +271,7 @@ export default function UploadBox({ onTaskStarted }) {
                 key={idx}
                 type="button"
                 onClick={() => handlePresetClick(preset)}
-                className={`text-sm font-cabinet px-3 py-1.5 rounded-lg border transition ${isActive
+                className={`text-base font-cabinet px-3 py-1.5 rounded-lg border transition leading-relaxed ${isActive
                     ? 'bg-purple-500/30 border-purple-500/50 text-purple-200 shadow-[0_0_10px_rgba(168,85,247,0.2)]'
                     : 'border-white/10 bg-white/5 hover:bg-purple-500/20 hover:border-purple-500/40 text-gray-300'
                   }`}
@@ -293,7 +293,7 @@ export default function UploadBox({ onTaskStarted }) {
 
       {/* Error Alert */}
       {error && (
-        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 flex items-start space-x-3 text-sm font-mono">
+        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 flex items-start space-x-3 text-base font-mono">
           <AlertCircle size={18} className="shrink-0 mt-0.5" />
           <span>{error}</span>
         </div>
@@ -301,7 +301,7 @@ export default function UploadBox({ onTaskStarted }) {
 
       {/* Submit Action Button */}
       <div className="flex justify-end items-center space-x-4 pt-2">
-        <div className="text-sm text-gray-400 font-stardom flex items-center space-x-1.5">
+        <div className="text-base text-gray-400 font-stardom flex items-center space-x-1.5">
           <ShieldCheck size={14} className="text-green-400" />
           <span>Least-Privilege Tool Gate Armed</span>
         </div>
@@ -309,7 +309,7 @@ export default function UploadBox({ onTaskStarted }) {
           type="button"
           disabled={isSubmitting || !prompt.trim()}
           onClick={handleSubmit}
-          className="px-6 py-3.5 rounded-xl font-mono text-sm font-bold tracking-wide transition-all duration-200 flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-[0_0_25px_rgba(168,85,247,0.3)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          className="px-6 py-3.5 rounded-xl font-mono text-base font-bold tracking-wide transition-all duration-200 flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-[0_0_25px_rgba(168,85,247,0.3)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
           {isSubmitting ? (
             <>

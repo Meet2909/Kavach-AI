@@ -38,8 +38,19 @@ export default function DashboardView({ onNavigateTab }) {
   return (
     <div className="space-y-8 animate-fade-in-up">
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-white/10 pb-6">
-        <div>
+      <div className="relative flex flex-col items-center justify-center border-b border-white/10 pb-10 mb-4 pt-6">
+        <div className="w-full flex justify-end md:absolute md:right-0 md:top-6 mb-6 md:mb-0 z-10">
+          <button
+            onClick={fetchStatus}
+            className="px-4 py-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-xs font-mono text-gray-300 flex items-center space-x-2 transition"
+          >
+            <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+            <span className="font-stardom">Sync Telemetry</span>
+            {lastRefreshed && <span className="text-gray-500">({lastRefreshed})</span>}
+          </button>
+        </div>
+
+        <div className="flex flex-col items-center space-y-4">
           <div className="flex items-center space-x-3">
             <span className="text-xs px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-mono border border-purple-500/30">
               KAVACH-AI OS v1.0
@@ -49,23 +60,10 @@ export default function DashboardView({ onNavigateTab }) {
               <span>Air-Gapped Sovereign Node</span>
             </span>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight mt-2 font-mono text-white">
-            Industrial Command Center
-          </h1>
-          {/* UPDATED: Changed font-mono to font-cabinet */}
-          <p className="text-base text-gray-400 font-cabinet mt-1">
-            Deterministic multimodal reasoning & bounded agent orchestration for critical infrastructure.
-          </p>
+          <div className="flex flex-col items-center">
+            <span className="font-stardom text-6xl md:text-8xl lg:text-[7rem] leading-none tracking-widest text-white">कAVACH</span>
+          </div>
         </div>
-
-        <button
-          onClick={fetchStatus}
-          className="self-start md:self-auto px-4 py-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-xs font-mono text-gray-300 flex items-center space-x-2 transition"
-        >
-          <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
-          <span className="font-stardom">Sync Telemetry</span>
-          {lastRefreshed && <span className="text-gray-500">({lastRefreshed})</span>}
-        </button>
       </div>
 
       {/* Primary KPI Grid */}
@@ -88,7 +86,7 @@ export default function DashboardView({ onNavigateTab }) {
             </div>
           </div>
           {/* UPDATED: Changed font-mono to font-cabinet */}
-          <div className="mt-4 pt-3 border-t border-white/10 text-xs font-cabinet text-gray-400">
+          <div className="mt-4 pt-3 border-t border-white/10 text-sm text-gray-300 leading-relaxed font-cabinet">
             {health?.version ? `Version: ${health.version}` : 'Waiting for connection'}
           </div>
         </div>
@@ -111,7 +109,7 @@ export default function DashboardView({ onNavigateTab }) {
             </div>
           </div>
           {/* UPDATED: Changed font-mono to font-cabinet */}
-          <div className="mt-4 pt-3 border-t border-white/10 text-xs font-cabinet text-gray-400 truncate">
+          <div className="mt-4 pt-3 border-t border-white/10 text-sm text-gray-300 leading-relaxed font-cabinet">
             {sovereignty?.verdict || 'OS kernel network monitored'}
           </div>
         </div>
@@ -129,7 +127,7 @@ export default function DashboardView({ onNavigateTab }) {
             </div>
           </div>
           {/* UPDATED: Changed font-mono to font-cabinet */}
-          <div className="mt-4 pt-3 border-t border-white/10 text-xs font-cabinet text-gray-400">
+          <div className="mt-4 pt-3 border-t border-white/10 text-sm text-gray-300 leading-relaxed font-cabinet">
             Laptop 1: Llama 8B · Laptop 2: Qwen VL/Coder
           </div>
         </div>
@@ -149,7 +147,7 @@ export default function DashboardView({ onNavigateTab }) {
             </div>
           </div>
           {/* UPDATED: Changed font-mono to font-cabinet */}
-          <div className="mt-4 pt-3 border-t border-white/10 text-xs font-cabinet text-gray-400">
+          <div className="mt-4 pt-3 border-t border-white/10 text-sm text-gray-300 leading-relaxed font-cabinet">
             Hard 15s subprocess timeout
           </div>
         </div>

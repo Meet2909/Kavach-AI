@@ -214,16 +214,6 @@ export default function App() {
               )}
             </div>
 
-            <div className="flex items-center space-x-3 text-xs font-mono">
-              <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300 flex items-center space-x-2">
-                <Server size={12} className="text-purple-400" />
-                <span className="font-stardom">Dual GPU Cluster (6GB x2)</span>
-              </div>
-              <div className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 flex items-center space-x-1.5">
-                <ShieldCheck size={13} />
-                <span className="font-stardom">Zero Telemetry</span>
-              </div>
-            </div>
           </header>
 
           {/* Dynamic Panel Content Container */}
