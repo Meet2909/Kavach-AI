@@ -140,20 +140,8 @@ export default function App() {
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-[#0b0d12] text-white select-none">
       
-      {/* 3D WebGL PRISM BACKGROUND */}
-      <div className="fixed inset-0 w-full h-full pointer-events-none z-0 opacity-60">
-        <Prism
-          height={4.6}
-          baseWidth={6.2}
-          animationType="3drotate"
-          glow={0.7}
-          noise={0.12}
-          transparent
-          scale={1.5}
-          hueShift={0}
-          colorFrequency={2.8}
-          timeScale={0.14}
-        />
+      {/* SOLID BACKGROUND */}
+      <div className="fixed inset-0 w-full h-full pointer-events-none z-0 bg-[#0b0d12]">
       </div>
 
       {/* FOREGROUND LAYOUT */}
@@ -163,14 +151,8 @@ export default function App() {
         <aside className="w-[300px] shrink-0 h-full border-r border-white/10 bg-black/60 backdrop-blur-2xl flex flex-col justify-between shadow-[15px_0_35px_rgba(0,0,0,0.6)]">
           {/* Logo & Header */}
           <div className="p-8 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="brand-icon-wrap">
-                <ShieldCheck size={20} />
-              </div>
-              <div className="brand-mark-wrap">
-                <div className="brand-mark">KAVACH</div>
-                <div className="brand-subtitle">SOVEREIGN AIR-GAP OS</div>
-              </div>
+            <div className="flex items-center justify-center w-full">
+              <img src="/kawach_name.png" alt="Kavach" className="w-full max-w-[220px] object-contain" />
             </div>
           </div>
 
@@ -180,7 +162,7 @@ export default function App() {
               defaultActive={activeTab} 
               onItemClick={(index) => setActiveTab(index)} 
               textColor="#d1d5db"
-              accentColor="#c084fc"
+              accentColor="#3b82f6"
             />
           </div>
 
