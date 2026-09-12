@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
-import {
-  UploadCloud, File as FileIcon, CheckCircle2, AlertCircle, ArrowRight,
-  Sparkles, FileText, Image as ImageIcon, Code2, Database, ShieldCheck, RefreshCw
+import { 
+  UploadCloud, File as FileIcon, CheckCircle2, AlertCircle, ArrowRight, 
+  Sparkles, FileText, Image as ImageIcon, Code2, Database, ShieldCheck, RefreshCw 
 } from 'lucide-react';
 import api from '../api/client.js';
 
@@ -75,7 +75,7 @@ export default function UploadBox({ onTaskStarted }) {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [taskType, setTaskType] = useState('report');
-  const [activePreset, setActivePreset] = useState(PRESET_PROMPTS[0].label);
+  const [selectedPreset, setSelectedPreset] = useState(PRESET_PROMPTS[0].label);
   const [prompt, setPrompt] = useState(PRESET_PROMPTS[0].text);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -101,12 +101,22 @@ export default function UploadBox({ onTaskStarted }) {
     }
   };
 
-  const handlePresetClick = (preset) => {
-    setTaskType(preset.type);
-    setActivePreset(preset.label);
-    setPrompt(preset.text);
+  const handleTaskSelection = (nextType) => {
+    setTaskType(nextType);
+    const matchedPreset = PRESET_PROMPTS.find((preset) => preset.type === nextType);
+    if (matchedPreset) {
+      setSelectedPreset(matchedPreset.label);
+      setPrompt(matchedPreset.text);
+    } else {
+      setSelectedPreset(null);
+    }
   };
 
+  const handlePresetClick = (preset) => {
+    setTaskType(preset.type);
+    setSelectedPreset(preset.label);
+    setPrompt(preset.text);
+  };
 
   const handleSubmit = async () => {
     setError(null);
@@ -147,10 +157,10 @@ export default function UploadBox({ onTaskStarted }) {
       {/* Drag & Drop Upload Zone */}
       <div
         className={`relative rounded-2xl border-2 border-dashed transition-all duration-300 p-8 flex flex-col items-center justify-center cursor-pointer overflow-hidden ${isDragging
-          ? 'border-[#743014] bg-[#743014]/15 scale-[1.01]'
+          ? 'border-[#743014] bg-[#743014]/10 scale-[1.01]'
           : selectedFile
-            ? 'border-[#743014] bg-[#743014]/15 backdrop-blur-md'
-            : 'border-gray-200 bg-white hover:border-[#743014] hover:bg-gray-50 backdrop-blur-md'
+            ? 'border-[#743014] bg-[#743014]/10 backdrop-blur-md'
+            : 'border-gray-300 bg-white hover:border-[#743014] hover:bg-[#743014]/5 backdrop-blur-md'
           }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -200,7 +210,7 @@ export default function UploadBox({ onTaskStarted }) {
       {/* Task Type Selector Grid */}
       <div className="space-y-3">
         <label className="block text-base font-cabinet font-semibold tracking-wider text-gray-600 uppercase">
-           1. Select Autonomous Agent Pipeline
+          1. Select Autonomous Agent Pipeline
         </label>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {TASK_OPTIONS.map((opt) => {
@@ -210,22 +220,10 @@ export default function UploadBox({ onTaskStarted }) {
               <button
                 key={opt.id}
                 type="button"
-                onClick={() => {
-                  setTaskType(opt.id);
-                  const matchedPreset = PRESET_PROMPTS.find(p => p.type === opt.id);
-
-                  if (matchedPreset) {
-                    setActivePreset(matchedPreset.label);
-                    setPrompt(matchedPreset.text);
-                  } else {
-                    setActivePreset(null);
-                    setPrompt('');
-                  }
-                }}
-
+                onClick={() => handleTaskSelection(opt.id)}
                 className={`p-3.5 rounded-xl text-left transition-all duration-200 border flex flex-col justify-between ${isSelected
-                  ? 'border-[#743014] bg-[#743014]/15 shadow-[0_0_20px_rgba(168,85,247,0.2)]'
-                  : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                  ? 'border-[#743014] bg-[#743014]/15 shadow-[0_0_20px_rgba(116,48,20,0.15)]'
+                  : 'border-gray-200 bg-white hover:border-[#743014]/50 hover:bg-[#743014]/5'
                   }`}
               >
                 <div className="flex items-center justify-between mb-2">
@@ -260,20 +258,17 @@ export default function UploadBox({ onTaskStarted }) {
         </div>
 
         {/* Preset Prompt Pills */}
-        {/* Preset Prompt Pills */}
         <div className="flex flex-wrap gap-2">
           {PRESET_PROMPTS.map((preset, idx) => {
-            // Add the missing visual check!
-            const isActive = activePreset === preset.label;
-
+            const isActive = selectedPreset === preset.label;
             return (
               <button
                 key={idx}
                 type="button"
                 onClick={() => handlePresetClick(preset)}
                 className={`text-base font-cabinet px-3 py-1.5 rounded-lg border transition leading-relaxed ${isActive
-                    ? 'bg-[#743014]/15 border-[#743014] text-[#743014] shadow-[0_0_10px_rgba(168,85,247,0.2)]'
-                    : 'border-gray-200 bg-white hover:bg-[#743014]/15 hover:border-[#743014] text-gray-600'
+                    ? 'bg-[#743014]/15 border-[#743014] text-[#743014] shadow-[0_0_10px_rgba(116,48,20,0.15)]'
+                    : 'border-gray-200 bg-white hover:bg-[#743014]/10 hover:border-[#743014] text-gray-600'
                   }`}
               >
                 {preset.label}
@@ -293,7 +288,7 @@ export default function UploadBox({ onTaskStarted }) {
 
       {/* Error Alert */}
       {error && (
-        <div className="p-4 rounded-xl bg-[#743014]/15 border border-[#743014] text-[#743014] flex items-start space-x-3 text-base font-mono">
+        <div className="p-4 rounded-xl bg-[#743014]/10 border border-[#743014] text-[#743014] flex items-start space-x-3 text-base font-mono">
           <AlertCircle size={18} className="shrink-0 mt-0.5" />
           <span>{error}</span>
         </div>
@@ -309,7 +304,7 @@ export default function UploadBox({ onTaskStarted }) {
           type="button"
           disabled={isSubmitting || !prompt.trim()}
           onClick={handleSubmit}
-          className="px-6 py-3.5 rounded-xl font-mono text-base font-bold tracking-wide transition-all duration-200 flex items-center space-x-2 bg-gradient-to-r from-[#743014] to-[#743014] hover:from-[#743014] hover:to-[#743014] text-white shadow-[0_0_25px_rgba(136,19,55,0.3)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          className="px-6 py-3.5 rounded-xl font-mono text-base font-bold tracking-wide transition-all duration-200 flex items-center space-x-2 bg-gradient-to-r from-[#743014] to-[#84592B] hover:from-[#5a2410] hover:to-[#743014] text-white shadow-[0_0_25px_rgba(116,48,20,0.3)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
           {isSubmitting ? (
             <>
@@ -326,5 +321,4 @@ export default function UploadBox({ onTaskStarted }) {
       </div>
     </div>
   );
-} 
-
+}
