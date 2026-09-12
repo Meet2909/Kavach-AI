@@ -95,7 +95,7 @@ export default function SecurityAuditView() {
         <h1 className="text-3xl font-bold tracking-tight mt-2 font-mono text-white">
           Security & Sovereignty Audit
         </h1>
-        <p className="text-sm text-gray-400 font-mono mt-1">
+        <p className="text-base text-gray-400 font-mono mt-1 leading-relaxed">
           Provides mathematically verifiable, OS-level proof that KAVACH-AI makes zero external connections during inference.
         </p>
       </div>
@@ -113,20 +113,20 @@ export default function SecurityAuditView() {
               </span>
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
             </div>
-            <div className="text-xs text-gray-400 font-mono mt-1">
+            <div className="text-sm text-gray-400 font-mono mt-1 leading-relaxed">
               External Connections: <strong className="text-emerald-300">{sovereignty?.external_count ?? 0}</strong> · Total Active: {sovereignty?.connection_count ?? 0}
             </div>
           </div>
         </div>
 
-        <div className="flex items-center space-x-4 font-mono text-xs text-gray-300">
+        <div className="flex items-center space-x-4 font-mono text-sm text-gray-300">
           <div>
-            <div className="text-gray-500 text-[10px]">TOTAL OUTBOUND</div>
+            <div className="text-gray-500 text-sm">TOTAL OUTBOUND</div>
             <div className="font-bold text-white">{((sovereignty?.bytes_sent_total ?? 0) / 1024 / 1024).toFixed(2)} MB</div>
           </div>
           <div className="h-8 w-px bg-white/10"></div>
           <div>
-            <div className="text-gray-500 text-[10px]">TOTAL INBOUND</div>
+            <div className="text-gray-500 text-sm">TOTAL INBOUND</div>
             <div className="font-bold text-white">{((sovereignty?.bytes_recv_total ?? 0) / 1024 / 1024).toFixed(2)} MB</div>
           </div>
         </div>
@@ -135,16 +135,16 @@ export default function SecurityAuditView() {
       {/* Judge-Facing Snapshot Delta Demonstration Workflow */}
       <div className="p-6 rounded-2xl bg-black/40 border border-white/10 backdrop-blur-md shadow-xl space-y-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2 text-sm font-mono font-bold text-white">
+          <div className="flex items-center space-x-2 text-base font-mono font-bold text-white">
             <ShieldCheck size={18} className="text-purple-400" />
             <span>Judge Proof: Pre/Post Task Network Snapshot Delta</span>
           </div>
-          <span className="text-xs font-mono text-gray-400">
+          <span className="text-sm font-mono text-gray-400">
             Target: bytes_sent_delta ≈ 0
           </span>
         </div>
 
-        <p className="text-xs text-gray-400 font-mono leading-relaxed">
+        <p className="text-sm text-gray-400 font-mono leading-relaxed">
           1. Record baseline before starting an AI job. 2. Execute inference. 3. End snapshot to measure byte leakage.
         </p>
 
@@ -153,7 +153,7 @@ export default function SecurityAuditView() {
           <button
             onClick={handleStartSnapshot}
             disabled={snapshotState.evaluating || snapshotState.active}
-            className="px-4 py-2.5 rounded-xl bg-purple-600/30 hover:bg-purple-600/40 border border-purple-500/40 text-purple-200 font-mono text-xs font-bold transition flex items-center space-x-2 cursor-pointer disabled:opacity-50"
+            className="px-4 py-2.5 rounded-xl bg-purple-600/30 hover:bg-purple-600/40 border border-purple-500/40 text-purple-200 font-mono text-sm font-bold transition flex items-center space-x-2 cursor-pointer disabled:opacity-50"
           >
             <Play size={13} />
             <span>1. Record Baseline Snapshot</span>
@@ -162,14 +162,14 @@ export default function SecurityAuditView() {
           <button
             onClick={handleEndSnapshot}
             disabled={snapshotState.evaluating || !snapshotState.active}
-            className="px-4 py-2.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/40 border border-emerald-500/40 text-emerald-200 font-mono text-xs font-bold transition flex items-center space-x-2 cursor-pointer disabled:opacity-50"
+            className="px-4 py-2.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/40 border border-emerald-500/40 text-emerald-200 font-mono text-sm font-bold transition flex items-center space-x-2 cursor-pointer disabled:opacity-50"
           >
             <CheckCircle2 size={13} />
             <span>2. End Snapshot & Measure Delta</span>
           </button>
 
           {snapshotState.active && (
-            <div className="text-xs font-mono text-amber-300 flex items-center space-x-1.5 animate-pulse">
+            <div className="text-sm font-mono text-amber-300 flex items-center space-x-1.5 animate-pulse">
               <Activity size={13} />
               <span>Snapshot recording in progress since {snapshotState.startTime}...</span>
             </div>
@@ -178,26 +178,26 @@ export default function SecurityAuditView() {
 
         {/* Delta Results Report */}
         {snapshotState.delta && (
-          <div className="p-4 rounded-xl bg-black/60 border border-emerald-500/40 space-y-3 font-mono text-xs animate-fade-in-up">
+          <div className="p-4 rounded-xl bg-black/60 border border-emerald-500/40 space-y-3 font-mono text-sm animate-fade-in-up">
             <div className="flex items-center justify-between text-emerald-300 font-bold">
               <span>Sovereignty Delta Verified</span>
               <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-400">PASSED</span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-gray-300 pt-1">
               <div className="p-2.5 rounded bg-white/5 border border-white/5">
-                <div className="text-gray-500 text-[10px]">DELTA BYTES SENT</div>
+                <div className="text-gray-500 text-sm">DELTA BYTES SENT</div>
                 <div className="font-bold text-white">{snapshotState.delta.bytes_sent_delta ?? 0} B</div>
               </div>
               <div className="p-2.5 rounded bg-white/5 border border-white/5">
-                <div className="text-gray-500 text-[10px]">DELTA BYTES RECV</div>
+                <div className="text-gray-500 text-sm">DELTA BYTES RECV</div>
                 <div className="font-bold text-white">{snapshotState.delta.bytes_recv_delta ?? 0} B</div>
               </div>
               <div className="p-2.5 rounded bg-white/5 border border-white/5">
-                <div className="text-gray-500 text-[10px]">EXTERNAL CALLS</div>
+                <div className="text-gray-500 text-sm">EXTERNAL CALLS</div>
                 <div className="font-bold text-emerald-400">0 (Strictly Blocked)</div>
               </div>
               <div className="p-2.5 rounded bg-white/5 border border-white/5">
-                <div className="text-gray-500 text-[10px]">AIR-GAP PROOF</div>
+                <div className="text-gray-500 text-sm">AIR-GAP PROOF</div>
                 <div className="font-bold text-emerald-400">100% SOVEREIGN</div>
               </div>
             </div>
@@ -208,17 +208,17 @@ export default function SecurityAuditView() {
       {/* Process Connection Inspector */}
       <div className="p-6 rounded-2xl bg-black/40 border border-white/10 backdrop-blur-md shadow-xl space-y-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2 text-sm font-mono font-bold text-white">
+          <div className="flex items-center space-x-2 text-base font-mono font-bold text-white">
             <Cpu size={16} className="text-cyan-400" />
             <span>Process Network Connection Audit (/sovereignty/processes)</span>
           </div>
-          <span className="text-xs font-mono text-gray-400">
+          <span className="text-sm font-mono text-gray-400">
             Monitored PIDs: {processes.length}
           </span>
         </div>
 
         <div className="rounded-xl border border-white/10 overflow-hidden bg-black/50">
-          <table className="w-full text-left font-mono text-xs">
+          <table className="w-full text-left font-mono text-sm">
             <thead className="bg-white/5 border-b border-white/10 text-gray-400">
               <tr>
                 <th className="p-3">PID</th>
@@ -243,7 +243,7 @@ export default function SecurityAuditView() {
                     <td className="p-3 text-gray-400">{p.local_address || '127.0.0.1'}</td>
                     <td className="p-3 text-gray-400">{p.remote_address || 'None (Local Loop)'}</td>
                     <td className="p-3">
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-green-500/10 text-green-300 border border-green-500/20">
+                      <span className="text-sm px-2 py-0.5 rounded bg-green-500/10 text-green-300 border border-green-500/20">
                         {p.status || 'ESTABLISHED'}
                       </span>
                     </td>

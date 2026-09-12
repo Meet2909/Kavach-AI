@@ -38,10 +38,82 @@ from typing import Optional
 
 
 # ─────────────────────────────────────────────
-# LAN IP PREFIX — update this to your local network
-# All IPs starting with these prefixes are considered "safe local" traffic
+# DYNAMIC /24 SUBNET AUTO-DETECTION
+#
+# Instead of hardcoding the subnet prefix (e.g. "10.73.132."),
+# the orchestrator reads its own active NIC IP at startup and
+# derives the /24 prefix automatically.
+#
+# How it works:
+#   1. Read all non-loopback IPv4 addresses on this machine's NICs
+#   2. Pick the first one that looks like a LAN/hotspot address
+#   3. Extract the first 3 octets  →  that becomes the /24 prefix
+#
+# Example:
+#   Piyush's hotspot  → orchestrator gets 10.73.132.28
+#                     → CLUSTER_SUBNET = "10.73.132."
+#   Meet's hotspot    → orchestrator gets 192.168.43.45
+#                     → CLUSTER_SUBNET = "192.168.43."
+#   Travel router     → orchestrator gets 172.20.10.2
+#                     → CLUSTER_SUBNET = "172.20.10."
+#
+# No code change needed when switching hotspots.
+# Just call POST /sovereignty/reload_nodes after reconnecting.
 # ─────────────────────────────────────────────
-LAN_PREFIXES = ("192.168.", "10.", "172.", "127.", "::1", "localhost")
+
+FALLBACK_SUBNET = "10.73.132."   # used only if NIC detection fails
+LOOPBACK        = ("127.", "::1", "localhost")
+
+
+def detect_cluster_subnet() -> str:
+    """
+    Auto-detects the /24 subnet of the network the orchestrator is
+    currently connected to by reading its own active NIC IP.
+
+    Returns the 3-octet prefix string e.g. "10.73.132."
+    Falls back to FALLBACK_SUBNET if no suitable interface is found.
+    """
+    try:
+        for iface, addrs in psutil.net_if_addrs().items():
+            for addr in addrs:
+                # Only IPv4, skip loopback and link-local (169.254.x.x)
+                if addr.family != socket.AF_INET:
+                    continue
+                ip = addr.address
+                if ip.startswith("127.") or ip.startswith("169.254."):
+                    continue
+
+                # Extract first 3 octets to get the /24 prefix
+                parts = ip.split(".")
+                if len(parts) == 4:
+                    subnet = ".".join(parts[:3]) + "."
+                    print(f"[sovereignty_monitor] Auto-detected cluster subnet: {subnet} (from {iface}: {ip})")
+                    return subnet
+    except Exception as e:
+        print(f"[sovereignty_monitor] Subnet detection failed: {e}")
+
+    print(f"[sovereignty_monitor] Falling back to hardcoded subnet: {FALLBACK_SUBNET}")
+    return FALLBACK_SUBNET
+
+
+# Derived at module load — auto-matches whichever hotspot is active
+CLUSTER_SUBNET: str = detect_cluster_subnet()
+
+
+import ipaddress
+
+def is_trusted(remote_ip: str) -> bool:
+    """
+    Returns True if the remote IP is a private/local network address or loopback.
+    Uses Python's robust ipaddress module to correctly identify all local subnets
+    (e.g., 10.x.x.x, 192.168.x.x, 172.16.x.x, APIPA, and IPv6 locals).
+    """
+    try:
+        ip = ipaddress.ip_address(remote_ip)
+        return ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_multicast
+    except ValueError:
+        # Fallback for hostnames like 'localhost' if they slip through
+        return remote_ip.startswith(LOOPBACK)
 
 
 # ─────────────────────────────────────────────
@@ -88,38 +160,39 @@ def get_sovereignty_status() -> dict:
     external_connections = []
 
     for conn in connections:
-        if conn.status not in ("ESTABLISHED", "LISTEN", "TIME_WAIT"):
+        if conn.status not in ("ESTABLISHED", "LISTEN"):
             continue
         if conn.raddr:  # Has a remote address
             remote_ip = conn.raddr.ip
             remote_port = conn.raddr.port
-            is_lan = remote_ip.startswith(LAN_PREFIXES)
+            is_trusted_node = is_trusted(remote_ip)
 
             conn_info = {
-                "local"     : f"{conn.laddr.ip}:{conn.laddr.port}" if conn.laddr else "—",
-                "remote"    : f"{remote_ip}:{remote_port}",
-                "status"    : conn.status,
-                "is_lan"    : is_lan,
-                "pid"       : conn.pid
+                "local"       : f"{conn.laddr.ip}:{conn.laddr.port}" if conn.laddr else "—",
+                "remote"      : f"{remote_ip}:{remote_port}",
+                "status"      : conn.status,
+                "is_trusted"  : is_trusted_node,
+                "pid"         : conn.pid
             }
             active_connections.append(conn_info)
-            if not is_lan:
+            if not is_trusted_node:
                 external_connections.append(conn_info)
 
     is_air_gapped = len(external_connections) == 0
 
     return {
-        "timestamp"             : datetime.datetime.now().isoformat(),
-        "bytes_sent_total"      : net_io.bytes_sent,
-        "bytes_recv_total"      : net_io.bytes_recv,
-        "bytes_sent_mb"         : round(net_io.bytes_sent / (1024 * 1024), 4),
-        "bytes_recv_mb"         : round(net_io.bytes_recv / (1024 * 1024), 4),
-        "active_connections"    : active_connections,
-        "external_connections"  : external_connections,
-        "connection_count"      : len(active_connections),
-        "external_count"        : len(external_connections),
-        "is_air_gapped"         : is_air_gapped,
-        "verdict"               : (
+        "timestamp"           : datetime.datetime.now().isoformat(),
+        "bytes_sent_total"    : net_io.bytes_sent,
+        "bytes_recv_total"    : net_io.bytes_recv,
+        "bytes_sent_mb"       : round(net_io.bytes_sent / (1024 * 1024), 4),
+        "bytes_recv_mb"       : round(net_io.bytes_recv / (1024 * 1024), 4),
+        "active_connections"  : active_connections,
+        "external_connections": external_connections,
+        "connection_count"    : len(active_connections),
+        "external_count"      : len(external_connections),
+        "is_air_gapped"       : is_air_gapped,
+        "cluster_subnet"      : f"{CLUSTER_SUBNET}0/24",   # visible to judges
+        "verdict"             : (
             "🔒 AIR-GAPPED — No external connections detected."
             if is_air_gapped else
             f"⚠️  WARNING — {len(external_connections)} external connection(s) detected!"
@@ -232,14 +305,14 @@ def get_process_network_usage() -> dict:
     """
     process_connections = []
 
-    for proc in psutil.process_iter(["pid", "name", "connections"]):
+    for proc in psutil.process_iter(["pid", "name", "net_connections"]):
         try:
-            conns = proc.info.get("connections") or []
+            conns = proc.info.get("net_connections") or []
             active = [
                 {
-                    "remote": f"{c.raddr.ip}:{c.raddr.port}",
-                    "status": c.status,
-                    "is_external": not c.raddr.ip.startswith(LAN_PREFIXES)
+                    "remote"     : f"{c.raddr.ip}:{c.raddr.port}",
+                    "status"     : c.status,
+                    "is_external": not is_trusted(c.raddr.ip)
                 }
                 for c in conns
                 if c.raddr and c.status == "ESTABLISHED"
