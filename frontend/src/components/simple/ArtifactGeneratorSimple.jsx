@@ -117,7 +117,7 @@ export default function ArtifactGeneratorSimple({ initialJobId }) {
       {/* All passed banner */}
       {allPassed && (
         <div className="p-4 rounded-2xl bg-[#282B4A]/10 border border-[#282B4A]/20 border-2 text-center">
-          <p className="text-[#282B4A] font-bold text-lg">âœ… Your document is ready!</p>
+          <p className="text-[#FFFFF] font-bold text-lg">âœ… Your document is ready!</p>
           <p className="text-[#282B4A] text-sm mt-1">All checks passed. You can download it now.</p>
         </div>
       )}

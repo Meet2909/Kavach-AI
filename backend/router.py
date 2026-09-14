@@ -31,9 +31,9 @@ def route_task(task_type: str, file_type: str = ""):
         selected = 'vision'
         reason = "Task involves image processing, P&ID diagram analysis, or visual inspection."
         confidence = 0.95
-    elif file_type in ['csv', 'xlsx', 'xls'] or any(k in task_type for k in ['calculation', 'code', 'csv_query', 'tabular', 'filter']):
+    elif file_type in ['csv', 'xlsx', 'xls'] or any(k in task_type for k in ['calculation', 'code', 'coding', 'sandbox', 'csv_query', 'tabular', 'filter', 'python']):
         selected = 'coder'
-        reason = "Task involves structured tabular data analysis or code calculations."
+        reason = "Task involves structured data analysis, code execution, or engineering calculations."
         confidence = 0.90
     else:
         selected = 'general'

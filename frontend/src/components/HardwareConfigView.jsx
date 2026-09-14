@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { 
   Cpu, Server, Zap, CheckCircle2, ArrowRight, ShieldCheck, 
   RefreshCw, Layers, Gauge, Database, Compass 
@@ -98,7 +98,7 @@ export default function HardwareConfigView() {
           <div className="space-y-3 pt-2 text-xs font-mono">
             <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-[#282B4A]/20 border-2">
               <span className="text-[#282B4A]">Hot-Swap Models:</span>
-              <span className="font-bold text-[#282B4A]">qwen2.5-vl:7b â‡„ qwen2.5-coder:7b</span>
+              <span className="font-bold text-[#282B4A]">qwen2.5-vl:7b ⇄ qwen2.5-coder:7b</span>
             </div>
             <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-[#282B4A]/20 border-2">
               <span className="text-[#282B4A]">Peak VRAM Observed:</span>
