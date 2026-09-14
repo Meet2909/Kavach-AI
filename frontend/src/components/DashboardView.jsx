@@ -69,7 +69,7 @@ export default function DashboardView({ onNavigateTab }) {
       {/* Primary KPI Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Card 1: API Gateway */}
-        <div className="p-5 rounded-2xl bg-[#EEEBDA] border border-[#282B4A]/20 border-2 backdrop-blur-md shadow-xl flex flex-col justify-between">
+        <div className="p-5 rounded-2xl bg: bg-[#282B4A]/10 border border-[#282B4A]/20 border-2 backdrop-blur-md shadow-xl flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-mono uppercase text-[#282B4A] tracking-wider">FastAPI Gateway</span>
             <Server size={18} className="text-[#282B4A]" />
@@ -82,7 +82,7 @@ export default function DashboardView({ onNavigateTab }) {
               </div>
             </div>
             <div className="text-xs font-mono text-[#282B4A] mt-1">
-              Port 8000 Ã‚Â· CORS Enabled
+              Port 8000 · CORS Enabled
             </div>
           </div>
           {/* UPDATED: Changed font-mono to font-cabinet */}
@@ -92,7 +92,7 @@ export default function DashboardView({ onNavigateTab }) {
         </div>
 
         {/* Card 2: Air-Gap Proof */}
-        <div className="p-5 rounded-2xl bg-[#EEEBDA] border border-[#282B4A]/20 border-2 backdrop-blur-md shadow-xl flex flex-col justify-between">
+        <div className="p-5 rounded-2xl bg: bg-[#282B4A]/10 border border-[#282B4A]/20 border-2 backdrop-blur-md shadow-xl flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-mono uppercase text-[#282B4A] tracking-wider">Air-Gap Status</span>
             <Lock size={18} className="text-[#282B4A]" />
@@ -115,7 +115,7 @@ export default function DashboardView({ onNavigateTab }) {
         </div>
 
         {/* Card 3: Distributed Hardware */}
-        <div className="p-5 rounded-2xl bg-[#EEEBDA] border border-[#282B4A]/20 border-2 backdrop-blur-md shadow-xl flex flex-col justify-between">
+        <div className="p-5 rounded-2xl bg: bg-[#282B4A]/10 border border-[#282B4A]/20 border-2 backdrop-blur-md shadow-xl flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-mono uppercase text-[#282B4A] tracking-wider">Compute Nodes</span>
             <Cpu size={18} className="text-[#282B4A]" />
@@ -128,12 +128,12 @@ export default function DashboardView({ onNavigateTab }) {
           </div>
           {/* UPDATED: Changed font-mono to font-cabinet */}
           <div className="mt-4 pt-3 text-sm text-[#282B4A] leading-relaxed font-cabinet">
-            Laptop 1: Llama 8B Ã‚Â· Laptop 2: Qwen VL/Coder
+            Laptop 1: Llama 8B · Laptop 2: Qwen VL/Coder
           </div>
         </div>
 
         {/* Card 4: Docker Sandbox */}
-        <div className="p-5 rounded-2xl bg-[#EEEBDA] border border-[#282B4A]/20 border-2 backdrop-blur-md shadow-xl flex flex-col justify-between">
+        <div className="p-5 rounded-2xl bg: bg-[#282B4A]/10 border border-[#282B4A]/20 border-2 backdrop-blur-md shadow-xl flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-mono uppercase text-[#282B4A] tracking-wider">Isolation Sandbox</span>
             <FileCode size={18} className="text-[#282B4A]" />
@@ -143,7 +143,7 @@ export default function DashboardView({ onNavigateTab }) {
               {health?.sandbox?.ready ? 'Docker Active' : 'Ready'}
             </div>
             <div className="text-xs font-mono text-[#282B4A] mt-1">
-              --network none Ã‚Â· 256MB cap
+              --network none · 256MB cap
             </div>
           </div>
           {/* UPDATED: Changed font-mono to font-cabinet */}
@@ -196,7 +196,7 @@ export default function DashboardView({ onNavigateTab }) {
             </div>
             {/* UPDATED: Changed font-mono to font-cabinet */}
             <p className="text-sm text-[#282B4A] font-cabinet mt-2 leading-relaxed">
-              Execute OS-level baseline snapshot diff: prove bytes_sent_delta Ã¢â€°Ë† 0 during multimodal task inference.
+              Execute OS-level baseline snapshot diff: prove bytes_sent_delta ≈ 0 during multimodal task inference.
             </p>
           </div>
 

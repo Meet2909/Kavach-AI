@@ -12,7 +12,7 @@
     ]
   },
   "vision": {
-    "model_id": "qwen2.5vl:7b",
+    "model_id": "qwen2.5vl:3b",
     "backend": "ollama",
     "host": "http://10.73.132.79:11434",
     "capabilities": [

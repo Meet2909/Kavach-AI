@@ -159,13 +159,31 @@ def execute_agent_loop(task_payload: dict, memory: AgentMemory) -> List[Dict[str
                     memory.add_trace("SYSTEM", f"Executing hardware VRAM swap to {target_model}...")
                     try:
                         swap_model(target_model, host=target_ip)
-                        time.sleep(2)  # Let Ollama finish initialising after swap before inference
+                        # ── Active readiness poll: wait until model appears in /api/ps ──────────
+                        # sleep(2) was insufficient — vision/coder 7B models take 60-90s to load
+                        # on 6GB VRAM. Firing inference mid-load causes a 150s timeout.
+                        # Poll /api/ps for up to 90s to confirm the model is actually in VRAM.
+                        model_ready = False
+                        host_url_swap = target_ip if str(target_ip).startswith("http") else f"http://{target_ip}"
+                        for poll_attempt in range(18):  # 18 × 5s = 90s max wait
+                            try:
+                                ps_req = urllib.request.Request(f"{host_url_swap}/api/ps")
+                                with urllib.request.urlopen(ps_req, timeout=5) as ps_resp:
+                                    ps_data = json.loads(ps_resp.read().decode())
+                                    loaded_names = [m.get("name", "") for m in ps_data.get("models", [])]
+                                    if any(target_model.split(":")[0] in n for n in loaded_names):
+                                        model_ready = True
+                                        memory.add_trace("SYSTEM", f"Model '{target_model}' confirmed in VRAM after {(poll_attempt+1)*5}s.")
+                                        break
+                            except Exception:
+                                pass
+                            time.sleep(5)
+                        if not model_ready:
+                            memory.add_trace("WARN", f"Model '{target_model}' did not appear in VRAM within 90s — attempting inference anyway.")
+                        # ─────────────────────────────────────────────────────────────────────────
                     except Exception as e:
                         memory.add_trace("SYSTEM", f"VRAM swap notice: {str(e)}")
 
-                
-                memory.add_trace(current_state.value, f"Firing inference request to {target_model} on {target_ip}.")
-                
                 # Assemble the 4-Pillar Metaprompt — pass task_type so vision gets image-aware prompt
                 grounded_prompt = construct_metaprompt(user_prompt, ev, task_type=memory.context.get('task_type', 'general'))
                 
@@ -182,29 +200,31 @@ def execute_agent_loop(task_payload: dict, memory: AgentMemory) -> List[Dict[str
                     "options": {
                         # Cap output length — prevents unbounded generation that exhausts VRAM
                         "num_predict": 512,
-                        # Limit KV cache size — critical for 6GB GPU; 2048 fits vision+text comfortably
-                        "num_ctx": 2048,
+                        # Vision tasks: 1024 ctx — the 3b model + image tokens + 6GB GPU can't handle 2048
+                        # without hitting OOM → HTTP 500. 1024 fits ~225 visual tokens (384px image) safely.
+                        # Text tasks: 2048 ctx — no image tokens so full context is safe.
+                        "num_ctx": 1024 if is_vision_task else 2048,
                         # Low temperature = faster, deterministic output (no sampling overhead)
                         "temperature": 0.1,
                     }
                 }
                 
                 # Base64 encode and attach visual asset if present.
-                # Images are resized to 512px max — this is the critical GPU optimization:
-                # 1024px → ~1500 visual tokens; 512px → ~400 tokens. 4x less VRAM for KV cache.
-                # On a 6GB RTX 4050, this is the difference between timing out and responding in <60s.
+                # Images resized to 384px for vision tasks (3b model on 6GB GPU):
+                #   512px → ~400 visual tokens + 2048 ctx → OOM → HTTP 500
+                #   384px → ~225 visual tokens + 1024 ctx → fits in 6GB safely
                 file_path = memory.context.get('file_path')
                 if file_path and any(file_path.lower().endswith(ext) for ext in ['.png', '.jpg', '.jpeg', '.webp', '.bmp']):
                     import base64, io
                     try:
                         from PIL import Image
                         img = Image.open(file_path).convert("RGB")
-                        # 512px max: reduces visual tokens ~4x vs 1024px — essential for 6GB VRAM
-                        img.thumbnail((512, 512), Image.LANCZOS)
+                        # 384px for 3b vision model: ~225 visual tokens, fits 6GB VRAM with num_ctx 1024
+                        img.thumbnail((384, 384), Image.LANCZOS)
                         buf = io.BytesIO()
-                        img.save(buf, format="JPEG", quality=70)  # quality 70 keeps diagnostics readable
+                        img.save(buf, format="JPEG", quality=65)  # q65 balances readability vs token count
                         b64_img = base64.b64encode(buf.getvalue()).decode('utf-8')
-                        memory.add_trace(current_state.value, f"Image compressed & encoded ({len(b64_img)//1024} KB, max 512px, q70).")
+                        memory.add_trace(current_state.value, f"Image compressed & encoded ({len(b64_img)//1024} KB, max 384px, q65).")
                     except ImportError:
                         # Pillow not installed — send raw (may be large)
                         with open(file_path, "rb") as img_file:
@@ -238,6 +258,8 @@ def execute_agent_loop(task_payload: dict, memory: AgentMemory) -> List[Dict[str
                             memory.add_trace(current_state.value, f"Model '{target_model}' confirmed available on {host_url}.")
                 except Exception:
                     pass  # If tags check fails, still try inference
+                
+                memory.add_trace(current_state.value, f"Firing inference request to {target_model} on {target_ip}.")
 
                 try:
                     payload = json.dumps(request_payload).encode('utf-8')
@@ -246,25 +268,16 @@ def execute_agent_loop(task_payload: dict, memory: AgentMemory) -> List[Dict[str
                         data=payload,
                         headers={'Content-Type': 'application/json'}
                     )
-                    # With 512px images and num_predict=512, vision inference on RTX 4050 6GB
-                    # completes in 30-90s. 150s gives comfortable headroom without hanging the UI.
-                    inference_timeout = 150 if is_vision_task else 90
+                    # Vision inference with qwen2.5vl:7b on a 6GB RTX 4050 with a real image
+                    # takes 2.5-4 minutes. 150s was exactly at the boundary, causing every
+                    # vision task to time out. 300s (5 min) gives safe headroom.
+                    # Non-vision text inference on llama3.1 completes in 30-90s, 120s is fine.
+                    inference_timeout = 300 if is_vision_task else 120
                     with urllib.request.urlopen(req, timeout=inference_timeout) as response:
                         gen_data = json.loads(response.read().decode())
                         gen_text = gen_data.get('response', '').strip()
                         memory.context['raw_response'] = gen_text
                         memory.add_trace(current_state.value, f"Inference complete ({len(gen_text)} chars generated).")
-                        
-                    # ****CRITICAL FIX: Explicitly flush VRAM immediately after inference
-                    # This guarantees the 6GB GPU is completely empty before the OBSERVE phase
-                    # hits the FastAPI verification node on the same laptop.
-                    try:
-                        evict_payload = json.dumps({"model": target_model, "keep_alive": 0}).encode('utf-8')
-                        evict_req = urllib.request.Request(f"{host_url}/api/generate", data=evict_payload, headers={'Content-Type': 'application/json'})
-                        urllib.request.urlopen(evict_req, timeout=5)
-                        memory.add_trace("SYSTEM", f"VRAM successfully flushed (evicted {target_model}).")
-                    except Exception as e:
-                        memory.add_trace("WARN", f"Failed to evict VRAM: {e}")
                         
                 except Exception as infer_err:
                     memory.add_trace("WARN", f"Live node unreachable ({infer_err}).")
@@ -276,25 +289,50 @@ def execute_agent_loop(task_payload: dict, memory: AgentMemory) -> List[Dict[str
                         memory.context['inference_failed'] = True
                     else:
                         memory.add_trace("WARN", "Retry timed out, but preserving prior successful response.")
+
+                finally:
+                    # ── Always flush VRAM after inference attempt, success OR failure ────────────
+                    # Previously this was inside the success-only `with` block, so a timeout left
+                    # the model loaded in VRAM, corrupting the GPU state for every subsequent
+                    # request and causing a cascade of timeouts.
+                    # This `finally` guarantees eviction runs whether inference succeeded or timed out.
+                    try:
+                        evict_payload = json.dumps({"model": target_model, "keep_alive": 0}).encode('utf-8')
+                        evict_req = urllib.request.Request(f"{host_url}/api/generate", data=evict_payload, headers={'Content-Type': 'application/json'})
+                        urllib.request.urlopen(evict_req, timeout=10)
+                        memory.add_trace("SYSTEM", f"VRAM flushed (evicted {target_model}).")
+                    except Exception as e:
+                        memory.add_trace("WARN", f"VRAM eviction failed: {e}. GPU may still have {target_model} loaded.")
                 
                 current_state = AgentState.OBSERVE
                 
             # 6. OBSERVE PHASE
             elif current_state == AgentState.OBSERVE:
-                memory.add_trace(current_state.value, "Response captured and parsed into memory.")
+                # ── Check if inference actually succeeded before claiming a response ──
+                if memory.context.get('inference_failed'):
+                    # Inference node was unreachable (e.g. WinError 10060 connection refused).
+                    # Log a clear diagnostic so the UI trace shows exactly what happened
+                    # instead of misleadingly saying "Response captured".
+                    target_ip = memory.context.get('target_ip', 'unknown')
+                    target_model = memory.context.get('target_model', 'unknown')
+                    memory.add_trace("FAILED", f"Inference node unreachable: {target_model} @ {target_ip}. Verify Ollama is running on that host and the port is open.")
+                    memory.add_trace("FAILED", "Request was NOT served — aborting execution cycle. Check that the inference node is online and accepting connections.")
+                    current_state = AgentState.FAILED
+                else:
+                    memory.add_trace(current_state.value, "Response captured and parsed into memory.")
 
-                # ── Vaibhav's Verification Node (DEPRECATED) ─────────────────
-                # We have shifted verification entirely to Laptop 1 (Gateway) using 
-                # a local LLM-as-a-judge to prevent VRAM crashes on Vaibhav's machine.
-                # The raw response is passed directly to the VERIFY phase where the 
-                # new artifact_validator.py takes over.
-                raw = memory.context.get('raw_response') or ''
-                if raw and not memory.context.get('inference_failed'):
-                    memory.add_trace(current_state.value, "Bypassing remote Verification Node — deferring to local LLM-as-a-judge (Gateway).")
-                    memory.context['verification_decision'] = "DEFERRED_TO_LOCAL_JUDGE"
-                # ─────────────────────────────────────────────────────────────
+                    # ── Vaibhav's Verification Node (DEPRECATED) ─────────────────
+                    # We have shifted verification entirely to Laptop 1 (Gateway) using 
+                    # a local LLM-as-a-judge to prevent VRAM crashes on Vaibhav's machine.
+                    # The raw response is passed directly to the VERIFY phase where the 
+                    # new artifact_validator.py takes over.
+                    raw = memory.context.get('raw_response') or ''
+                    if raw:
+                        memory.add_trace(current_state.value, "Bypassing remote Verification Node — deferring to local LLM-as-a-judge (Gateway).")
+                        memory.context['verification_decision'] = "DEFERRED_TO_LOCAL_JUDGE"
+                    # ─────────────────────────────────────────────────────────────
 
-                current_state = AgentState.VERIFY
+                    current_state = AgentState.VERIFY
                 
             # 7. VERIFY PHASE
             elif current_state == AgentState.VERIFY:

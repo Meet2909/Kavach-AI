@@ -53,14 +53,14 @@ export default function ArtifactGeneratorView({ initialJobId }) {
       {/* Header */}
       <div className="pb-6">
         <div className="flex items-center space-x-3">
-          <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#282B4A]/10 text-[#282B4A] font-mono border border-[#282B4A]/20 border-2">
+          <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#282B4A]/10 text-[#100e0e] font-mono border border-[#282B4A]/20 border-2">
             3-Check Validation Pipeline
           </span>
-          <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#282B4A]/10 text-[#282B4A] font-mono border border-[#282B4A]/20 border-2">
+          <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#282B4A]/10 text-[#0e0d0d] font-mono border border-[#282B4A]/20 border-2">
             Decision 10: Generated â‰  Correct
           </span>
         </div>
-        <h1 className="text-3xl font-bold tracking-tight mt-2 font-mono text-[#282B4A]">
+        <h1 className="text-3xl font-bold tracking-tight mt-2 font-mono text-[#030303]">
           Artifact Generator & Validation Gate
         </h1>
         <p className="text-base text-[#282B4A] font-mono mt-1 leading-relaxed">
